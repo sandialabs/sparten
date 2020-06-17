@@ -1,0 +1,32 @@
+## ************************************************************************
+##     SparTen: Software for Sparse Tensor Decompositions
+##     by Sandia National Laboratories
+##
+## Sandia National Laboratories is a multimission laboratory managed
+## and operated by National Technology and Engineering Solutions of Sandia,
+## LLC, a wholly owned subsidiary of Honeywell International, Inc., for the
+## U.S. Department of Energy's National Nuclear Security Administration under
+## contract DE-NA0003525.
+##
+## Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+## (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+## Government retains certain rights in this software.
+## ************************************************************************
+tolerance 1e-4
+maxOuterIter 20
+maxInnerIter 10
+offset 1e-2
+offsetTolerance 1e-10
+progressInterval 10
+eps 1e-10
+precision 16
+nComponent 5
+solver Multiplicative-Update
+input-file test/data/cpapr_test_10x10x10_1e+06/tensor.txt
+output-file tensor.out
+local-ordinal-type int32
+global-ordinal-type int32
+sparse-value-type int32
+kruskal-value-type float
+log-verbosity release
+index-style 1 
