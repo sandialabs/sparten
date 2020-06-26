@@ -53,7 +53,7 @@ template <
       {
          // Fixed value here now, since this is a property of the machine precision
          using value_type = typename View1D::value_type;
-         constexpr auto free_hessian_scale_cutoff = std::numeric_limits<value_type>::epsilon();
+         constexpr auto free_hessian_scale_cutoff = sparten::numeric_limits<value_type>::epsilon;
 
          // Barrett this is where your code goes!
          Kokkos::parallel_for(
@@ -93,7 +93,7 @@ Kokkos::pair<bool, typename NumericalTypes::kruskal_value_t> RowSubProblemDamped
    auto nComps = _kruskal_info.num_components;
 
    kruskal_value_t dInitialKktError = 0.0;
-   kruskal_value_t dKktError = std::numeric_limits<kruskal_value_t>::max();  //  DOUBLE_MAX;
+   kruskal_value_t dKktError = sparten::numeric_limits<kruskal_value_t>::max;
    kruskal_value_t dObj ;
    kruskal_value_t dPredictedReduction;
    kruskal_value_t dMuDamping = _config.mu_initial;
@@ -109,7 +109,7 @@ Kokkos::pair<bool, typename NumericalTypes::kruskal_value_t> RowSubProblemDamped
 #ifndef KOKKOS_ENABLE_CUDA
    Kokkos::Timer timer;
 #else
-      double timer = 0.0;
+   //      double timer = 0.0;
 #endif
 
    kruskal_value_t elapsed_time = 0.0;
@@ -418,7 +418,7 @@ int32_t RowSubProblemDampedNewton<TeamPolicy, NumericalTypes>::_compute_search_d
 #ifndef KOKKOS_ENABLE_CUDA // TODO replace this macro
       Kokkos::Timer timer;
 #else
-      double timer = 0.0;
+      //      double timer = 0.0;
 #endif
    kruskal_value_t  elapsed_time = 0.0;
 

@@ -75,7 +75,7 @@ public:
   void normalize();                                                                                         //!< Normalizes the data
   void normalize(SubIdx iDim);                                                                              //!< Normalizes the data
   SubIdx get_nComponent() const;                                                                            //!< Returns the number of components
-  SubIdx get_nDim() const;
+  KOKKOS_INLINE_FUNCTION SubIdx get_nDim() const {return _nDim;};
   Dimension get_dim() const;                                                                                //!< Returns the number of dimensions
   SubIdx  get_max_mode_size() const;                                                                                //!< Returns the number of dimensions
   std::vector<SubIdx> const &get_nPerMode() const;                                                          //!< Returns a std::vector containing n elements per mode (size = nDim)

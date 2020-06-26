@@ -195,5 +195,11 @@ TeamPolicy get_team_policy_bigrow(Kokkos::Cuda const&, size_t n_iter) {
 }
 #endif
 
-
+template <class T>
+  struct numeric_limits {
+    static constexpr auto max = std::numeric_limits<T>::max();
+    static constexpr auto min = std::numeric_limits<T>::min();
+    static constexpr auto infinity = std::numeric_limits<T>::infinity();
+    static constexpr auto epsilon = std::numeric_limits<T>::epsilon();
+  };
 } // sparten

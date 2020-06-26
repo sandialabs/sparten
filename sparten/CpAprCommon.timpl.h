@@ -247,7 +247,7 @@ CpAprCommon<NumericTypes,Derived>::compute(
   bool converged = false;
   int32_t funcEvals = 0;
   int32_t innerIters = 0;
-  kruskal_value_t errorNorm = std::numeric_limits<kruskal_value_t>::max();
+  kruskal_value_t errorNorm = sparten::numeric_limits<kruskal_value_t>::max;
 
   auto timingData = self().DampedNewtonTimingData{};
 
