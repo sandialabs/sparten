@@ -276,7 +276,7 @@ typename KruskalView1D::value_type _obj_likelihood_big(
 
       if( d < dSafeGuard ) {
          d = dSafeGuard;
-         f_inner = std::numeric_limits<kruskal_value_t>::infinity();
+         f_inner = sparten::numeric_limits<kruskal_value_t>::infinity;
       } else {
          f_inner += spData(locIndex(iNonz)) * static_cast<kruskal_value_t>(log(d));
       }
@@ -284,7 +284,7 @@ typename KruskalView1D::value_type _obj_likelihood_big(
    },Kokkos::Sum<kruskal_value_t >(f_part) );
 
    f+=f_part;
-   if( f ==  std::numeric_limits<kruskal_value_t>::infinity() ) func_flag = false;
+   if( f ==  sparten::numeric_limits<kruskal_value_t>::infinity ) func_flag = false;
       // Increment function evaluation
       // ++(self().stats.n_func_evals);
    // Returns infinity if it cannot evaluate the function
@@ -382,7 +382,7 @@ void _damped_newton_driver_big(
    Kokkos::deep_copy(_daVar, Kokkos::subview(dkdata, iRow, Kokkos::ALL));
 
    kruskal_value_t dInitialKktError = 0.0;
-   kruskal_value_t dKktError = std::numeric_limits<kruskal_value_t>::max();  //  DOUBLE_MAX;
+   kruskal_value_t dKktError = sparten::numeric_limits<kruskal_value_t>::max;
    kruskal_value_t dObj ;
    kruskal_value_t dPredictedReduction;
    kruskal_value_t dMuDamping = config.mu_initial;
@@ -555,7 +555,7 @@ void _damped_newton_driver_big(
 #ifndef KOKKOS_ENABLE_CUDA
       Kokkos::Timer timer;
 #else
-      double timer = 0.0;
+      //      double timer = 0.0;
 #endif
       kruskal_value_t search_dir_time = 0.0;
 
@@ -719,7 +719,7 @@ void _damped_newton_driver_big(
 #ifndef KOKKOS_ENABLE_CUDA // TODO Get rid of these ugly macros
          Kokkos::Timer line_search_timer;
 #else
-         double timer = 0.0;
+	 //         double timer = 0.0;
 #endif
 
          double elapsed_time = 0.0;
@@ -742,7 +742,7 @@ void _damped_newton_driver_big(
                config.log_zero_safeguard,
                flag);
 
-         if (flag == false ) dObjOld = std::numeric_limits<kruskal_value_t>::max();
+         if (flag == false ) dObjOld = sparten::numeric_limits<kruskal_value_t>::max;
          ++(stats[iRow].n_func_evals);
  //        reset_timer(timer); // don't measure time in _obj_likelihood
 
@@ -782,7 +782,7 @@ void _damped_newton_driver_big(
             if ((dGradDotNew > 0.0) || (dNewL1Norm < config.min_variable_nonzero_tolerance))
             {
                // No descent.  Treat this as a failed step.
-               dObjNew = std::numeric_limits<kruskal_value_t>::max();
+               dObjNew = sparten::numeric_limits<kruskal_value_t>::max;
                if (nNumSteps == 0) {
                   dObj1 = dObjNew;
                }
@@ -826,7 +826,7 @@ void _damped_newton_driver_big(
             ++nNumSteps;
          }
 
-         if ( fabs(dObj1) > std::numeric_limits<kruskal_value_t>::max())
+         if ( fabs(dObj1) > sparten::numeric_limits<kruskal_value_t>::max)
          {
             dObj1 = dObjOld;
          }
@@ -982,7 +982,7 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
    using team_policy_t2 = TeamPolicyType;
    using team_policy_t = Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>>;
 
-   typedef std::pair<sub_index_t, sub_index_t> mypair;
+   typedef Kokkos::pair<sub_index_t, sub_index_t> mypair;
 
    struct {
       bool operator()(const mypair &l, const mypair &r) const { return l.first > r.first; }
@@ -1079,7 +1079,7 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
             base_t::reorder_nonzeros_host(
                nRow, nElement, Kokkos::subview(sparseInput.get_indices_host_view(), iDim, Kokkos::ALL), host_nonzLocs, host_nonzLocsIdx
             );
-            for (int i = 0; i <= nRow; ++i) {
+            for (sub_index_t i = 0; i <= nRow; ++i) {
                locOffset[iDim][i] = host_nonzLocsIdx[i];
             }
 
@@ -1089,8 +1089,8 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
             // Use Welford's algorithm to compute sample stats for each mode in a single pass
             int iRow = 0;
             int nnz = 0;
-            int max = std::numeric_limits<int>::min();
-            int min = std::numeric_limits<int>::max();
+            int max = sparten::numeric_limits<int>::min;
+            int min = sparten::numeric_limits<int>::max;
             double tmp = 0.0;
             double sum = 0.0;
             double mean = 0.0;
@@ -1136,7 +1136,7 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
             base_t::reorder_nonzeros_host(
                nRow, nElement, Kokkos::subview(sparseInput.get_indices_host_view(), iDim, Kokkos::ALL), host_nonzLocs, host_nonzLocsIdx
             );
-            for (int i = 0; i <= nRow; ++i) {
+            for (sub_index_t i = 0; i <= nRow; ++i) {
                locOffset[iDim][i] = host_nonzLocsIdx[i];
             }
 
@@ -1144,10 +1144,10 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
             Kokkos::deep_copy(/*dst=*/nonzLocsIdx[iDim], /*src=*/host_nonzLocsIdx);
 
             // Use Welford's algorithm to compute sample stats for each mode in a single pass
-            int iRow = 0;
-            int nnz = 0;
-            int max = std::numeric_limits<int>::min();
-            int min = std::numeric_limits<int>::max();
+            sub_index_t iRow = 0;
+            sub_index_t nnz = 0;
+            sub_index_t max = sparten::numeric_limits<sub_index_t>::min;
+            sub_index_t min = sparten::numeric_limits<sub_index_t>::max;
             double tmp = 0.0;
             double sum = 0.0;
             double mean = 0.0;
@@ -1198,8 +1198,8 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
             Kokkos::deep_copy(scheduler[iDim],scheduler_host);
 #endif
          //
-            int largeRowCount=0;
-            int total_nonz_dense=0;
+            sub_index_t largeRowCount=0;
+            sub_index_t total_nonz_dense=0;
             for (int i = 0; i < nRow; ++i) {
 
                if( bucket[iDim][i].first > _config.threshold_nonz_per_row )
@@ -1236,7 +1236,7 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
    element_index_t func_evals   = 0;
    element_index_t inner_iters  = 0;
    kruskal_value_t obj          = 0.0;
-   kruskal_value_t errorNorm    = std::numeric_limits<kruskal_value_t>::max();
+   kruskal_value_t errorNorm    = sparten::numeric_limits<kruskal_value_t>::max;
 #ifndef KOKKOS_ENABLE_CUDA
 	 sub_index_t num_threads      = Kokkos::DefaultExecutionSpace::impl_thread_pool_size();
 #else
@@ -1248,7 +1248,7 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
    auto numMode = kruskalOutput.get_nDim();
    Kokkos::View<FactorMatrix<kruskal_value_t> *> ktensor("ktensor_tmp", numMode);
    auto kt_host = Kokkos::create_mirror_view(ktensor);
-   for (int i = 0; i < numMode; ++i) {
+   for (sub_index_t i = 0; i < numMode; ++i) {
       kt_host(i) = kruskalOutput.get_factor_matrix(i);
    }
    Kokkos::deep_copy(ktensor, kt_host);
@@ -1374,7 +1374,7 @@ DampedNewtonCpApr<NumericTypes>::_compute_with_policy(
             // Aggregate stats from each row per outer iteration
             // Custom Reducer is not working
 
-            for (int j = 0; j < kruskalOutput.get_nPerMode(iDim); j++) {
+            for (sub_index_t j = 0; j < kruskalOutput.get_nPerMode(iDim); j++) {
                timing_data.row.time_elapsed += row_stats_host[j].t_elapsed/num_threads;
                timing_data.row.compute_phi += row_stats_host[j].t_compute_phi;
                timing_data.row.search_direction += row_stats_host[j].t_search_direction/num_threads;

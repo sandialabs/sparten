@@ -509,12 +509,6 @@ SubIdx KruskalTensor<KruskalValue, SubIdx>::get_nComponent() const
 }
 
 template<class KruskalValue, class SubIdx>
-SubIdx KruskalTensor<KruskalValue, SubIdx>::get_nDim() const
-{
-  return _nDim;
-}
-
-template<class KruskalValue, class SubIdx>
 Dimension KruskalTensor<KruskalValue, SubIdx>::get_dim() const
 {
   return *_dim;

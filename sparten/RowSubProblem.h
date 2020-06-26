@@ -68,7 +68,7 @@ protected:
 #ifndef KOKKOS_ENABLE_CUDA // TODO Get rid of these ugly macros
 	  Kokkos::Timer timer;
 #else
-	  double timer = 0.0;
+	  //	  double timer = 0.0;
 #endif
 	  double elapsed_time = 0.0;
 
@@ -277,7 +277,7 @@ protected:
 #ifndef KOKKOS_ENABLE_CUDA // TODO Get rid of these ugly macros
 	  Kokkos::Timer timer;
 #else
-	  double timer = 0.0;
+	  //	  double timer = 0.0;
 #endif
 	  double elapsed_time = 0.0;
 
@@ -325,7 +325,7 @@ protected:
       if ((dGradDotNew > 0.0) || (dNewL1Norm < self()._config.min_variable_nonzero_tolerance))
       {
         // No descent.  Treat this as a failed step.
-        dObjNew = std::numeric_limits<kruskal_value_t>::max();
+        dObjNew = sparten::numeric_limits<kruskal_value_t>::max;
         if (nNumSteps == 0) {
            dObj1 = dObjNew;
         }
@@ -357,7 +357,7 @@ protected:
       ++nNumSteps;
     }
 
-    if ( dObj1 == std::numeric_limits<kruskal_value_t>::max() )
+    if ( dObj1 == sparten::numeric_limits<kruskal_value_t>::max )
     {
         dObj1 = dObjOld;
     }
@@ -433,7 +433,7 @@ protected:
 #ifndef KOKKOS_ENABLE_CUDA // TODO Get rid of these ugly macros
       Kokkos::Timer timer;
 #else
-      double timer = 0.0;
+      //      double timer = 0.0;
 #endif
       double elapsed_time = 0.0;
 
@@ -481,7 +481,7 @@ protected:
          if ((dGradDotNew > 0.0) || (dNewL1Norm < self()._config.min_variable_nonzero_tolerance))
          {
             // No descent.  Treat this as a failed step.
-            dObjNew = std::numeric_limits<kruskal_value_t>::max();
+            dObjNew = sparten::numeric_limits<kruskal_value_t>::max;
             if (nNumSteps == 0) {
                dObj1 = dObjNew;
             }
@@ -513,7 +513,7 @@ protected:
          ++nNumSteps;
       }
 
-      if ( dObj1 == std::numeric_limits<kruskal_value_t>::max() )
+      if ( dObj1 == sparten::numeric_limits<kruskal_value_t>::max )
       {
          dObj1 = dObjOld;
       }

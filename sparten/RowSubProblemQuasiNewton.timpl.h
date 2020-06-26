@@ -78,7 +78,7 @@ RowSubProblemQuasiNewton<TeamPolicy, NumericalTypes>::_solve()
 #ifndef KOKKOS_ENABLE_CUDA
 	Kokkos::Timer timer;
 #else
-	double timer = 0.0;
+	//	double timer = 0.0;
 #endif
 	kruskal_value_t elapsed_time = 0.0;
 
@@ -209,7 +209,7 @@ RowSubProblemQuasiNewton<TeamPolicy, NumericalTypes>::_solve()
     kruskal_value_t dTmpRho = static_cast<kruskal_value_t>(1.0) / dDeltaProduct;
 
     // Update the L-BFGS approximation.
-    if (dTmpRho < std::numeric_limits<kruskal_value_t>::max() && dTmpRho > 0.0)
+    if (dTmpRho < sparten::numeric_limits<kruskal_value_t>::max && dTmpRho > 0.0)
     {
       sparten::deep_copy(_team_member,
         Kokkos::subview(_daDeltaM, nlbfgsPos, Kokkos::ALL),
@@ -309,7 +309,7 @@ void RowSubProblemQuasiNewton<TeamPolicy, NumericalTypes>::_compute_phi()
 #ifndef KOKKOS_ENABLE_CUDA // TODO Get rid of these ugly macros
    Kokkos::Timer timer;
 #else
-   double timer = 0.0;
+   //double timer = 0.0;
 #endif
    kruskal_value_t elapsed_time = 0.0;
 
@@ -361,7 +361,7 @@ RowSubProblemQuasiNewton<TeamPolicy, NumericalTypes>::_compute_search_dir(
 #ifndef KOKKOS_ENABLE_CUDA // TODO replace this macro
 	Kokkos::Timer timer;
 #else
-	double timer = 0.0;
+	//	double timer = 0.0;
 #endif
 	kruskal_value_t elapsed_time = 0.0;
 

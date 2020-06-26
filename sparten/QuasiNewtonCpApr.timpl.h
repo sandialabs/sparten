@@ -193,8 +193,8 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
 	  // Use Welford's algorithm to compute sample stats for each mode in a single pass
 	  sub_index_t iRow = 0;
 	  sub_index_t nnz = 0;
-	  sub_index_t max = std::numeric_limits<sub_index_t >::min();
-	  sub_index_t min = std::numeric_limits<sub_index_t >::max();
+	  sub_index_t max = sparten::numeric_limits<sub_index_t >::min;
+	  sub_index_t min = sparten::numeric_limits<sub_index_t >::max;
 	  kruskal_value_t tmp = 0.0;
 	  kruskal_value_t sum = 0.0;
 	  kruskal_value_t mean = 0.0;
@@ -241,7 +241,7 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
   element_index_t func_evals   = 0;
   element_index_t inner_iters  = 0;
   kruskal_value_t obj          = 0.0;
-  kruskal_value_t errorNorm    = std::numeric_limits<kruskal_value_t>::max();
+  kruskal_value_t errorNorm    = sparten::numeric_limits<kruskal_value_t>::max;
 #ifndef KOKKOS_ENABLE_CUDA
   sub_index_t num_threads      = Kokkos::DefaultExecutionSpace::impl_thread_pool_size();
 #else
