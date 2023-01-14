@@ -1,21 +1,4 @@
-## ************************************************************************
-##     SparTen: Software for Sparse Tensor Decompositions
-##     by Sandia National Laboratories
-##
-## Sandia National Laboratories is a multimission laboratory managed
-## and operated by National Technology and Engineering Solutions of Sandia,
-## LLC, a wholly owned subsidiary of Honeywell International, Inc., for the
-## U.S. Department of Energy's National Nuclear Security Administration under
-## contract DE-NA0003525.
-##
-## Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
-## (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
-## Government retains certain rights in this software.
-## ************************************************************************
-
-===================================================
-v1.1.0 (January 13, 2023)
-===================================================
+# v1.1.0 (2023-01-13)
 - Included Kokkos as a submodule (instead of static copy)
 - Changed default ktensor type from float to double
 - Add capability to use ktensor in file as initial guess
@@ -27,6 +10,5 @@ v1.1.0 (January 13, 2023)
 - Fixed consistency issues with <iomanip>
 - Fixed issues leading to warnings for CUDA builds
 
-===================================================
-v1.0.0 (June 17, 2020)
-===================================================
+# v1.0.0 (2020-06-17)
+- Initial release
