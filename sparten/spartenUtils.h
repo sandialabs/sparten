@@ -195,6 +195,15 @@ TeamPolicy get_team_policy_bigrow(Kokkos::Cuda const&, size_t n_iter) {
 }
 #endif
 
+KOKKOS_INLINE_FUNCTION double DLog( double x  )
+{
+#ifdef KOKKOS_ENABLE_CUDA
+   return log(x);
+#else
+   return std::log(x);
+#endif
+}
+
 template <class T>
   struct numeric_limits {
     static constexpr auto max = std::numeric_limits<T>::max();

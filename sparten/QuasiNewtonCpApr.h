@@ -75,6 +75,15 @@ private:
 		kruskal_value_t loopTimer
 	) const;
 
+	void _log_history(
+		sub_index_t outer_iter,
+		element_index_t inner_iter,
+		element_index_t func_evals,
+		kruskal_value_t error_norm,
+		kruskal_value_t obj,
+		kruskal_value_t loopTimer
+	) const;
+
 	void _log_summary(
 		sub_index_t outer_iter,
 		element_index_t inner_iter,

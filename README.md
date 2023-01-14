@@ -1,17 +1,8 @@
 # SparTen: Software for Sparse Tensor Decompositions
 
-SparTen provides capabilities for computing reduced-dimension
-representations of sparse multidimensional count value data. The
-software consists of the data decompositions methods described in
-published journal papers. These decomposition methods consist of
-several numerical optimization methods (one based on a multiplicative
-update iterative approach, one based on quasi-Newton optimization, and
-one based on damped Newton optimization) for fitting the input data to
-a reduced-dimension model of the data with the lowest amount of
-error. The software also consists of generalized computation that
-leverages the Kokkos hardware abstraction library to compute the
-reduced-data representations on multiple computer architectures,
-including multicore and GPU systems.
+SparTen is a set of C++ tools that provide capabilities for generating
+sparse count tensor data and computing low-rank canonical polyadic
+(CP) decompositions.
 
 ```
 Sandia National Laboratories is a multimission laboratory managed
@@ -25,69 +16,80 @@ Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
 Government retains certain rights in this software.
 ```
 
-## Dependencies
-1. GCC 4.8.5 or later (requires C++11)
-2. CMake
-3. Kokkos 
-4. Googletest (optional)
-5. Doxygen (optional)
-6. LCOV, GCOV (optional)
+**Main point of contact:** Danny Dunlavy (dmdunla@sandia.gov)
 
+## Downloading SparTen git submodules
 
-## Build Instructions
-The instructions below assume a directory structure similar to the following.
-For concreteness, assume we will building an optimized version of the code
-using GNU compilers and OpenMP parallelism.
+SparTen includes git submodules that must be retrieved as follows 
+before building SparTen:
 
 ```
-top-level
-| -- build
-     | -- serial
-     | -- openmp
-     | -- gpu
-| -- sparten
-     | -- tpl
-          | -- kokkos
-          | -- googletest
+git submodule update --init --recursive
 ```
 
-Of course that structure isn't required, but modifying it will require
-adjusting paths in the build instructions below.
+## Building SparTen
 
-### Serial Build (default)
+See [BUILD.md](BUILD.md) for building serial, OpenMP, or NVIDIA GPU
+versions.
 
-1. Navigate to the ```build/serial``` directory.
-2. Configure (using CMake): ```cmake -DKokkos_ENABLE_SERIAL=ON ../../sparten/.```
-3. Build: ```make```
-4. Test: ```make test```
+## Running SparTen
 
-### OpenMP Build
+Examples below assume you are running SparTen from a directory where
+you built SparTen using the instructions above.
 
-Additional dependencies: OpenMP
+### Getting help
 
-1. Navigate to the ```build/openmp``` directory.
-2. Configure (using CMake): ```cmake -DKokkos_ENABLE_OPENMP=ON ../../sparten/.```
-3. Build: ```make```
-4. Test: ```make test```
+```
+./bin/Sparten_main --help
+```
 
-### CUDA (GPU) Build
+### Using example test data
 
-Additional dependencies: CUDA
+```
+./bin/Sparten_main \
+    --rank 3 \
+    --input $PWD/test/data/cpapr_test_10x10x10_1e+06/tensor.txt \
+    --output $PWD/cpapr_test_10x10x10.ktns
+```
 
-1. Navigate to the ```build/gpu``` directory.
-2. Set up compiler: ```export CXX=$PWD/../../sparten/tpl/kokkos/bin/nvcc_wrapper```
-3. Configure (using CMake): ```cmake -DKokkos_ENABLE_CUDA=ON  -DKokkos_ARCH_PASCAL61=ON ../../sparten/.```
-4. Build: ```make```
-5. Test: ```make test```
+### Creating and using randomly generated tensor data
 
-NOTE: See the list of supported architectures in Kokkos and the corresponding 
-```Kokkos_ARCH_*``` parameters [here](https://github.com/kokkos/kokkos/wiki/Compiling#architecture-keywords) 
+Create data:
 
-## Generating Reference Documentation
+```
+./bin/Sparten_tensor_gen \
+    --num-components 5 \
+    --max-num-nonzeros 100 \
+    --dim-sizes "10,20,30" \
+    --sptensor-output-file $PWD/cpapr_10x20x30_100.tns \
+    --ktensor-output-file $PWD/cpapr_10x20x30_100.gen.ktns
+```
 
-Additional dependencies: doxygen
+Run SparTen:
 
-1. Navigate to the ```build/serial``` directory.
-2. Configure (using CMake): ```cmake ../../sparten/.```
-3. Build: ```make```
-4. Generate: ```make doc```
+```
+./bin/Sparten_main \
+    --rank 3 \
+    --input $PWD/cpapr_10x20x30_100.tns \
+    --output $PWD/cpapr_10x20x30_100.gen.ktns
+```
+
+## Citing SparTen
+
+If you use SparTen in your work, please cite the following:
+
+Keita Teranishi, Daniel M. Dunlavy, Jeremy M. Myers and Richard F. Barrett, 
+"SparTen: Leveraging Kokkos for On-node Parallelism in a Second-Order Method for Fitting Canonical Polyadic Tensor Models to Poisson Data," 
+2020 IEEE High Performance Extreme Computing Conference (HPEC), 
+Waltham, MA, USA, 2020, pp. 1-7, 
+https://doi.org/10.1109/HPEC43674.2020.9286251.
+
+```
+@INPROCEEDINGS{SparTen,
+  author={Teranishi, Keita and Dunlavy, Daniel M. and Myers, Jeremy M. and Barrett, Richard F.},
+  booktitle={2020 IEEE High Performance Extreme Computing Conference (HPEC)}, 
+  title={SparTen: Leveraging Kokkos for On-node Parallelism in a Second-Order Method for Fitting Canonical Polyadic Tensor Models to Poisson Data}, 
+  year={2020},
+  pages={1-7},
+  doi={10.1109/HPEC43674.2020.9286251}}
+```

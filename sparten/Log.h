@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 namespace sparten
 {
@@ -45,16 +46,15 @@ public:
     TO_FILE
   };
 
-  /// \todo Decide on defintions of verbosity levels
   //! Verbosity level of logging output
   enum Verbosity
   {
-    QUIET = 0,		//!< Absolutely no output
+	QUIET   = 0,	//!< Absolutely no output
     RELEASE = 1,	//!< Standard progress output
-    DEBUG_0 = 2,	//!< Minimal debug info
-    DEBUG_1 = 3,	//!< More debug info
-    DEBUG_2 = 4,	//!< Even more debug info
-    DEBUG_3 = 5,  //!< Log everything
+    VERBOSE = 2,	//!< Wordy progress output
+    DEBUG_1 = 3,	//!< High-level debug info (e.g. driver, I/O, etc.)
+    DEBUG_2 = 4,	//!< Coarse grain debug info (e.g. solver level)
+    DEBUG_3 = 5,    //!< Fine grain debug info (e.g. row subproblem level)
   };
 
   Log(Verbosity level) : _level(level) {;}  //!< Constructor

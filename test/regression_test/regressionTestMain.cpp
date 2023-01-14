@@ -30,7 +30,7 @@ class SpartenEnvironment : public ::testing::Environment
 	  virtual void SetUp()
 	  {
 	    Kokkos::initialize(argc, argv);
-	    Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
+	    Kokkos::print_configuration(std::cout);
 	  }
 
 	  virtual void TearDown()

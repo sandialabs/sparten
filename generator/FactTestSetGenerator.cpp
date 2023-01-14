@@ -32,10 +32,6 @@
 
 namespace sparten
 {
-
-/**
- *
- */
 template<class SubIdx>
 bool compare_int_arrays(std::vector<SubIdx> const &parg1, std::vector<SubIdx> const &parg2)
 {
@@ -219,9 +215,6 @@ int32_t FactTestSetGenerator<SparseValue, KruskalValue, ElemIdx, SubIdx>::get_Pa
   return 0;
 }
 
-/**
- *  Based on Matlab create_problem.generate_data_sparse.
- */
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 bool FactTestSetGenerator<SparseValue, KruskalValue, ElemIdx, SubIdx>::drawNonzeroElements(KruskalTensor<KruskalValue, SubIdx> *cExpectedFactors)
 {
@@ -332,86 +325,6 @@ bool FactTestSetGenerator<SparseValue, KruskalValue, ElemIdx, SubIdx>::drawNonze
   return true;
 }
 
-
-
-  /* TODO: remove (this method is not used in the code and should be removed)
-template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
-KruskalTensor<KruskalValue, SubIdx>* FactTestSetGenerator<SparseValue, KruskalValue, ElemIdx, SubIdx>::genNonNegativeKruscalTensor( )
-{
-
-
-  KruskalTensor<KruskalValue, SubIdx> *myFactor = new KruskalTensor<KruskalValue, SubIdx>(_cDims.size(), _nNumComponents, _cDims);
-  std::vector<KruskalValue> weights(_nNumComponents);
-
-  for (SubIdx n = 0; n < _cDims.size(); ++n)
-  {
-    SubIdx _nNumToBoost = static_cast<SubIdx>(_dFracBoosted * (static_cast<KruskalValue>(_cDims[n])));
-    if (_nNumToBoost > static_cast<SubIdx>(_cDims[n]))
-    {
-      _nNumToBoost = static_cast<SubIdx>(_cDims[n]);
-    }
-    // Create the initial random matrix
-    for (SubIdx r = 0; r < _nNumComponents; ++r)
-    {
-      for (SubIdx i = 0; i < _cDims[n]; ++i)
-      {
-        myFactor->set_factor_matrix_element(_cRNG.generate_rand_double_matlab(), n, i, r);
-      }
-    }
-
-    // Randomly boost the values
-    for (SubIdx r = 0; r < _nNumComponents; ++r)
-    {
-      // Randomly permute the factor vector (randperm in Matlab).
-      std::vector<SortablePair<KruskalValue, SubIdx>> caP;
-      for (SubIdx i = 0; i < _cDims[n]; ++i)
-      {
-        caP.push_back(SortablePair<KruskalValue, SubIdx>(_cRNG.generate_rand_double_matlab(), i));
-      }
-      std::sort(caP.begin(), caP.end(), sortablePair_compare<KruskalValue, SubIdx>);
-
-      for (SubIdx i = 0; i < _nNumToBoost; ++i)
-      {
-        KruskalValue tmpVal = myFactor->get_factor_matrix_element(n, caP[i].second, r);
-        tmpVal *= _dMaxValue;
-        myFactor->set_factor_matrix_element(tmpVal, n, caP[i].second, r);
-
-      }
-    }
-  }
-
-  // Choose random component weights and normalize to make the factor matrix completely stochastic.
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    weights[r] = _cRNG.generate_rand_double_matlab();
-  }
-
-  myFactor->set_weight_vector(weights);
-  myFactor->normalize();          // Use One Norm
-
-  KruskalValue dTotalWeight = 0.0;
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    dTotalWeight += weights[r];
-  }
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    weights[r] = weights[r] / dTotalWeight;
-
-  }
-  myFactor->set_weight_vector(weights);
-
-  // Rescale the weights so the expected factors sum to the target number of samples.
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    weights[r] *= (KruskalValue)_nMaxNnz;
-  }
-  myFactor->set_weight_vector(weights);
-
-  return myFactor;
-}
-  */
-  
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 KruskalTensor<KruskalValue, SubIdx>* FactTestSetGenerator<SparseValue, KruskalValue, ElemIdx, SubIdx>::genNoisedNonNegativeKruscalTensor( KruskalValue dThres, KruskalValue dNoise )
 {
@@ -502,8 +415,6 @@ KruskalTensor<KruskalValue, SubIdx>* FactTestSetGenerator<SparseValue, KruskalVa
   return myFactor;
 }
 
-
-
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 SparseTensor<SparseValue, ElemIdx, SubIdx>* FactTestSetGenerator<SparseValue, KruskalValue, ElemIdx, SubIdx>::genSparseTensor( KruskalTensor<KruskalValue, SubIdx> *myFactor )
 {
@@ -528,97 +439,6 @@ SparseTensor<SparseValue, ElemIdx, SubIdx>* FactTestSetGenerator<SparseValue, Kr
   return _cSpTensor;
 }
 
-  /* TODO: remove (this method is not used in the code and should be removed)
-template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
-bool FactTestSetGenerator<SparseValue, KruskalValue, ElemIdx, SubIdx>::genSpFromBoostedRndKruskalTensor(SparseTensor<SparseValue, ElemIdx, SubIdx> **cDataTensor,
-    KruskalTensor<KruskalValue, SubIdx> **cExpectedFactors)
-{
-  // Set the expected factors to random stochastic values, using the same random samples as Matlab.
-
-  //  std::cout << "Dims: " << _cDims[0] << "  "  << _cDims[1] << "  " << _cDims[2] <<  " components " << _nNumComponents << " dimsize " << _cDims.size() << std::endl;
-  KruskalTensor<KruskalValue, SubIdx> *myFactor = new KruskalTensor<KruskalValue, SubIdx>(_cDims.size(), _nNumComponents, _cDims);
-  std::vector<KruskalValue> weights(_nNumComponents);
-
-  for (SubIdx n = 0; n < _cDims.size(); ++n)
-  {
-    SubIdx _nNumToBoost = static_cast<SubIdx>(_dFracBoosted * (static_cast<KruskalValue>(_cDims[n])));
-    if (_nNumToBoost > static_cast<SubIdx>(_cDims[n]))
-    {
-      _nNumToBoost = static_cast<SubIdx>(_cDims[n]);
-    }
-    // Create the initial random matrix
-    for (SubIdx r = 0; r < _nNumComponents; ++r)
-    {
-      for (SubIdx i = 0; i < _cDims[n]; ++i)
-      {
-        myFactor->set_factor_matrix_element(_cRNG.generate_rand_double_matlab(), n, i, r);
-      }
-    }
-    //     std::cout << "Make values for mode " << n << " numboost "<< _nNumToBoost << std::endl;
-    // Randomly boost the values
-    for (SubIdx r = 0; r < _nNumComponents; ++r)
-    {
-      // Randomly permute the factor vector (randperm in Matlab).
-      std::vector<SortablePair<KruskalValue, SubIdx>> caP;
-      for (SubIdx i = 0; i < _cDims[n]; ++i)
-      {
-        caP.push_back(SortablePair<KruskalValue, SubIdx>(_cRNG.generate_rand_double_matlab(), i));
-      }
-      std::sort(caP.begin(), caP.end(), sortablePair_compare<KruskalValue, SubIdx>);
-
-      for (SubIdx i = 0; i < _nNumToBoost; ++i)
-      {
-        KruskalValue tmpVal = myFactor->get_factor_matrix_element(n, caP[i].second, r);
-        tmpVal *= _dMaxValue;
-        myFactor->set_factor_matrix_element(tmpVal, n, caP[i].second, r);
-
-      }
-    }
-  }
-
-  // Choose random component weights and normalize to make the factor matrix completely stochastic.
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    weights[r] = _cRNG.generate_rand_double_matlab();
-  }
-  //
-  myFactor->set_weight_vector(weights);
-  myFactor->normalize();          // Use One Norm
-
-  KruskalValue dTotalWeight = 0.0;
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    dTotalWeight += weights[r];
-  }
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    weights[r] = weights[r] / dTotalWeight;
-  }
-  myFactor->set_weight_vector(weights);
-
-  //    for (SubIdx  r = 0; r < _nNumComponents ; ++r)
-  //      std::cout <<" Weight [" << r << "] =" <<  myFactor->get_weight_vector()(r)  << std::endl;
-  // std::cout <<"Ktensor setting done" << std::endl;
-  // Generate nonzero elements in the data tensor.
-  if (drawNonzeroElements(myFactor) == false)
-  {
-    return false;
-  }
-
-  // Rescale the weights so the expected factors sum to the target number of samples.
-  for (SubIdx r = 0; r < _nNumComponents; ++r)
-  {
-    weights[r] *=  static_cast<KruskalValue>(_nMaxNnz);
-  }
-  myFactor->set_weight_vector(weights);
-
-  *cExpectedFactors = myFactor;
-  *cDataTensor = _cSpTensor;
-
-  return true;
-}
-  */
-  
 // Explicit instantiation
 template class FactTestSetGenerator<sparten::type::SubIdx, float, sparten::type::SubIdx, sparten::type::SubIdx> ;
 template class FactTestSetGenerator<sparten::type::SubIdx, float, sparten::type::ElemIdx, sparten::type::SubIdx> ;
@@ -636,4 +456,4 @@ template class FactTestSetGenerator<sparten::type::ElemIdx, double, sparten::typ
 template class FactTestSetGenerator<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> ;
 template class FactTestSetGenerator<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::ElemIdx> ;
 
-}
+} // end namespace sparten

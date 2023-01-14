@@ -30,14 +30,10 @@ namespace sparten
 {
 
 template<class KruskalValue, class SubIdx>
-DiscreteCumulativeDistribution<KruskalValue, SubIdx>::DiscreteCumulativeDistribution()
-{
-}
+DiscreteCumulativeDistribution<KruskalValue, SubIdx>::DiscreteCumulativeDistribution(){}
 
 template<class KruskalValue, class SubIdx>
-DiscreteCumulativeDistribution<KruskalValue, SubIdx>::~DiscreteCumulativeDistribution()
-{
-}
+DiscreteCumulativeDistribution<KruskalValue, SubIdx>::~DiscreteCumulativeDistribution(){}
 
 /*!
  *  @param[in] cPDF     The vector is a probability density function
@@ -62,7 +58,6 @@ bool DiscreteCumulativeDistribution<KruskalValue, SubIdx>::load(const VectorCons
     KruskalValue dNext = cPDF(i);
     if ((dNext < 0.0) || (dNext > 1.0))
     {
-      //std::cout << "*** Bad input to DiscreteCumulativeDistribution.load:  (" << i << ") = " << dNext << "\n";
       return false;
     }
     if (i == 0)
@@ -72,7 +67,6 @@ bool DiscreteCumulativeDistribution<KruskalValue, SubIdx>::load(const VectorCons
     {
       _cCDF(i) = dNext + _cCDF(i - 1);
     }
-        //  std::cout << "V(" << i << ") = " << _cCDF(i) << std::endl;
   }
 
   KruskalValue dTotal = _cCDF(_cCDF.extent(0) - 1);
@@ -80,8 +74,6 @@ bool DiscreteCumulativeDistribution<KruskalValue, SubIdx>::load(const VectorCons
 
   if ( dErr > 1000 * std::numeric_limits<KruskalValue>::epsilon())
   {
-    //std::cout << "*** Bad input to DiscreteCumulativeDistribution.load: " << " sums to " << std::setw(24) << std::setprecision(16) << dTotal << " instead of 1 (error "
-    //    << dErr << " )." << " Tolerance = " << 1000 * std::numeric_limits<KruskalValue>::epsilon() << std::endl;
     return false;
   }
 
@@ -104,21 +96,17 @@ bool DiscreteCumulativeDistribution<KruskalValue, SubIdx>::load(const Array2DCon
     double dNext = cPDF(r, nColumnIndex);
     if ((dNext < 0.0) || (dNext > 1.0))
     {
-      //std::cout << "*** Bad input to DiscreteCumulativeDistribution.load:  (" << r << "," << nColumnIndex << ") = " << dNext << "\n";
       return false;
     }
     if (r == 0)
       _cCDF(r) = dNext;
     else
       _cCDF(r) = dNext + _cCDF(r - 1);
-
-    //std::cout << "V(" << r << ") = " << _cCDF(r) << std::endl;
   }
 
   double dTotal = _cCDF(_cCDF.extent(0) - 1);
   if (fabs(dTotal - 1.0) > 1000 * std::numeric_limits<KruskalValue>::epsilon())
   {
-    //std::cout << "*** Bad input to DiscreteCumulativeDistribution.load: sums to " << std::setw(24) << std::setprecision(16) << dTotal << " instead of 1 (error " << std::fabs(dTotal - 1.0) << ")" << " Tolerance = " << 1000 * std::numeric_limits<KruskalValue>::epsilon() << std::endl;
     return false;
   }
 
@@ -178,4 +166,5 @@ template class DiscreteCumulativeDistribution<double, type::SubIdx> ;
 template class DiscreteCumulativeDistribution<double, type::ElemIdx> ;
 template class DiscreteCumulativeDistribution<float, type::ElemIdx> ;
 template class DiscreteCumulativeDistribution<float, type::SubIdx> ;
-}
+
+} // end namespace sparten

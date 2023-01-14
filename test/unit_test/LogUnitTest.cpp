@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <Sparten_Configure.h>
 
 namespace unitTest
 {
@@ -40,32 +41,35 @@ void LogUnitTest::TearDown()
 
 TEST_F(LogUnitTest, to_screen)
 {
-  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_SCREEN, "noFileNeeded.txt", sparten::Log::DEBUG_0);
-  log.print("LogUnitTest to screen", sparten::Log::RELEASE);
+  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_SCREEN,
+                                            "",
+                                            sparten::Log::RELEASE);
 }
 
 TEST_F(LogUnitTest, to_file)
 {
-  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_FILE, "test/data/output_LogTest_to_file.txt", sparten::Log::DEBUG_0);
-  log.print("LogUnitTest to file", sparten::Log::RELEASE);
-  
+  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_FILE,
+                                            SPARTEN_TEST_DIR "/test/data/output_LogTest_to_file.txt",
+                                            sparten::Log::RELEASE);
 }
 
 TEST_F(LogUnitTest, get_verbosity)
 {
-  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_FILE, "test/data/output_LogTest_to_file.txt", sparten::Log::RELEASE);
+  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_FILE,
+                                            SPARTEN_TEST_DIR "/test/data/output_LogTest_to_file.txt",
+                                            sparten::Log::RELEASE);
   ASSERT_EQ(log.get_verbosity(), sparten::Log::RELEASE);
   
 }
 
 TEST_F(LogUnitTest, fail_on_open_file)
 {
-  ASSERT_ANY_THROW(sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_FILE, "/etc/shouldntbeabletoopen", sparten::Log::DEBUG_0));
+  ASSERT_ANY_THROW(sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_FILE, "/shouldntbeabletoopen_directory/shouldnotbeabletoopen_file", sparten::Log::VERBOSE));
 }
 
 TEST_F(LogUnitTest, fail_on_log_type)
 {
-  ASSERT_ANY_THROW(sparten::Log &log = sparten::Log::new_log((sparten::Log::LogType)(-1), "noFileNeeded.txt", sparten::Log::RELEASE));
+  ASSERT_ANY_THROW(sparten::Log &log = sparten::Log::new_log((sparten::Log::LogType)(-1), "", sparten::Log::RELEASE));
 }
 
 TEST_F(LogUnitTest, fail_on_new_log)

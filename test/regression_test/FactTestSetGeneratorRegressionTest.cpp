@@ -41,7 +41,7 @@ namespace regressionTest
 	TEST_F(FactTestSetGeneratorRegressionTest, test_with_io)
     #endif
 	{
-	  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_SCREEN, "noFileNeeded", sparten::Log::QUIET);
+	  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_SCREEN, "", sparten::Log::QUIET);
 	  typedef sparten::AsciiIO<sparten::type::SubIdx, double, sparten::type::SubIdx, sparten::type::SubIdx> SpartenIO;
 	  sparten::KruskalTensor<double, sparten::type::SubIdx> *testFactors = nullptr;
 	  sparten::SparseTensor<sparten::type::SubIdx, sparten::type::SubIdx, sparten::type::SubIdx> *spTensor = nullptr;
@@ -57,8 +57,19 @@ namespace regressionTest
 	  testFactors = _testGen->genNoisedNonNegativeKruscalTensor(0.2, 0.05);
 	  spTensor = _testGen->genSparseTensor( testFactors );
 
-	  SpartenIO myIO1("test/ktensor.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
-	  SpartenIO myIO2("test/sptensor.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
+	  std::string fn1 = SPARTEN_TEST_DIR "/test/data/ktensor.txt";
+	  SpartenIO myIO1(fn1,
+                      SpartenIO::OVERWRITE,
+                      SpartenIO::SCIENTIFIC,
+                      16,
+                      SpartenIO::INDEX_1);
+	  std::string fn2 = SPARTEN_TEST_DIR "/test/data/sptensor.txt";
+	  SpartenIO myIO2(fn2,
+                      SpartenIO::OVERWRITE,
+                      SpartenIO::SCIENTIFIC,
+                      16,
+                      SpartenIO::INDEX_1);
+
 	  myIO1.write(*testFactors);
 	  myIO2.write(*spTensor);
 	  myIO1.close_file();
@@ -66,8 +77,18 @@ namespace regressionTest
 
 	  sparten::KruskalTensor<double, sparten::type::SubIdx> *testFactorsFromFile = nullptr;
 	  sparten::SparseTensor<sparten::type::SubIdx, sparten::type::SubIdx, sparten::type::SubIdx> *spTensorFromFile = nullptr;
-	  SpartenIO myIO3("test/sptensor.txt", SpartenIO::READ, SpartenIO::SCIENTIFIC, 16,SpartenIO::INDEX_1 );
-	  SpartenIO myIO4("test/ktensor.txt", SpartenIO::READ, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
+
+	  SpartenIO myIO3(fn2,
+                      SpartenIO::READ,
+                      SpartenIO::SCIENTIFIC,
+                      16,
+                      SpartenIO::INDEX_1 );
+	  SpartenIO myIO4(fn1,
+                      SpartenIO::READ,
+                      SpartenIO::SCIENTIFIC,
+                      16,
+                      SpartenIO::INDEX_1);
+
 	  spTensorFromFile = myIO3.read();
 	  testFactorsFromFile = myIO4.read_ktensor();
 	  myIO3.close_file();
@@ -136,8 +157,19 @@ namespace regressionTest
 	    ASSERT_EQ(result,true);
 	  }
 
-	  SpartenIO myIO5("test/ktensor_verify.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
-	  SpartenIO myIO6("test/sptensor_verify.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
+	  std::string fn5 = SPARTEN_TEST_DIR "/test/data/ktensor_verify.txt";
+	  SpartenIO myIO5(fn5,
+                      SpartenIO::OVERWRITE,
+                      SpartenIO::SCIENTIFIC,
+                      16,
+                      SpartenIO::INDEX_1);
+	  std::string fn6 = SPARTEN_TEST_DIR "/test/data/sptensor_verify.txt";
+	  SpartenIO myIO6(fn6,
+                      SpartenIO::OVERWRITE,
+                      SpartenIO::SCIENTIFIC,
+                      16,
+                      SpartenIO::INDEX_1);
+
 	  myIO5.write(*testFactorsFromFile);
 	  myIO6.write(*spTensorFromFile);
 	  myIO5.close_file();

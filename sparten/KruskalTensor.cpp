@@ -28,7 +28,6 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <iomanip>
 #include <type_traits> // std::is_floating_point
 
 namespace sparten

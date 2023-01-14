@@ -21,7 +21,7 @@
 #include <Kokkos_Core.hpp>
 #include <sparten/spartenAlgorithms.h>
 #include <sparten/SolverConfiguration.h>
-#include <iomanip>
+
 // TODO The cleanest way to get rid of these macros??
 #ifndef KOKKOS_ENABLE_CUDA
 #define reset_timer(timer) timer.reset()

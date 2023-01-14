@@ -62,11 +62,13 @@ protected:
   Kokkos::View<KruskalValue *,  Kokkos::HostSpace> _dKktVal;
 #endif
 
-  virtual bool does_violate_karush_kuhn_tucker_condition(KruskalTensor<KruskalValue, SubIdx> const &kruskalInput );                                                    //!< Performs check to ensure Karush-Kuhn-Tucker (KKT) condition is met for each mode
-  virtual bool does_violate_karush_kuhn_tucker_condition(KruskalTensor<KruskalValue, SubIdx> const &kruskalInput, SubIdx const iDim );                                 //!< Performs check to ensure Karush-Kuhn-Tucker (KKT) condition is met for each mode
-  virtual bool multiplicative_update(KruskalTensor<KruskalValue, SubIdx> &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDim);  //!< Performs the multiplicative update
-  virtual void compute_pi(KruskalTensor<KruskalValue, SubIdx> const &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDimSkip);   //!< Performs the computation of Pi (See introduction of the SparTen User Guide for more details)
-  virtual void compute_phi(KruskalTensor<KruskalValue, SubIdx> const &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDim);      //!< Performs the computation of Phi (See introduction of the SparTen User Guide for more details)
+  bool does_violate_karush_kuhn_tucker_condition(KruskalTensor<KruskalValue, SubIdx> const &kruskalInput );                                                    //!< Performs check to ensure Karush-Kuhn-Tucker (KKT) condition is met for each mode
+  bool does_violate_karush_kuhn_tucker_condition(KruskalTensor<KruskalValue, SubIdx> const &kruskalInput, SubIdx const iDim );                                 //!< Performs check to ensure Karush-Kuhn-Tucker (KKT) condition is met for each mode
+  bool multiplicative_update(KruskalTensor<KruskalValue, SubIdx> &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDim);  //!< Performs the multiplicative update
+  void compute_pi(KruskalTensor<KruskalValue, SubIdx> const &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDimSkip);   //!< Performs the computation of Pi (See introduction of the SparTen User Guide for more details)
+  void compute_phi(KruskalTensor<KruskalValue, SubIdx> const &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDim);      //!< Performs the computation of Phi (See introduction of the SparTen User Guide for more details)
+
+ KruskalValue compute_obj( KruskalTensor<KruskalValue, SubIdx> const &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDim);
 };
 
 } // sparten

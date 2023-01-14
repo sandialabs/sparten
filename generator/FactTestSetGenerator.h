@@ -20,8 +20,6 @@
  \brief Class declaration for a test set generator.
  */
 
-/// \todo Add missing documentation to this file.
-/// \todo Eliminate use of #if 0 or #if 1
 #pragma once
 
 #include <generator/RandGenMersenneTwister.h>
@@ -71,15 +69,8 @@ public:
   int32_t set_Parameters(SubIdx nNumComponents, ElemIdx nMaxNonz, uint64_t nSeed, KruskalValue dFracBoosted, KruskalValue dMaxValue, KruskalValue dSmallValue);	        //!< Set the
   int32_t get_Parameters(SubIdx &nNumComponents, ElemIdx &nMaxNonz, uint64_t &nSeed, KruskalValue &dFracBoosted, KruskalValue &dMaxValue, KruskalValue &dSmallValue);	  //!< Get the
 
-  /* TODO: remove (this method is not used in the code and should be removed)
-KruskalTensor<KruskalValue, SubIdx> *genNonNegativeKruscalTensor();                                                     //!< Generate a random KruskalTensor
-  */
   KruskalTensor<KruskalValue, SubIdx> *genNoisedNonNegativeKruscalTensor(KruskalValue thres, KruskalValue noise);         //!< Generate a random KruskalTensor
   SparseTensor<SparseValue, ElemIdx, SubIdx> *genSparseTensor(KruskalTensor<KruskalValue, SubIdx>  *cExpectedFactor);     //!< Generate sparse tensor data from a random factored KruskalTensor
-
-  /* TODO: remove (this method is not used in the code and should be removed)
-  bool genSpFromBoostedRndKruskalTensor(SparseTensor<SparseValue, ElemIdx, SubIdx> **cDataTensor, KruskalTensor<KruskalValue, SubIdx> **cExpectedFactors);              //!<
-  */
   
 private:
   SubIdx nKEY_LENGTH = 1;                                                           //!<
@@ -103,5 +94,5 @@ private:
   FactTestSetGenerator &operator=(FactTestSetGenerator const &);                    //!< Blocking use of assignment operator
 };
 
-}
+} // end namespace sparten
 

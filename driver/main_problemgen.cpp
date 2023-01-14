@@ -196,7 +196,7 @@ int main(int argc, char **argv)
 {
   //// Initialization ////
   Kokkos::initialize(argc, argv);
-  //Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
+  Kokkos::print_configuration(std::cout);
 
   try
   {
