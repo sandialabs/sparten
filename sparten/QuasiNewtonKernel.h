@@ -120,9 +120,6 @@ struct QuasiNewtonKernel
 
   }
 
-
 };
-
-
 
 } // end namespace sparten

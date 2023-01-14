@@ -25,7 +25,7 @@
 #include <sparten/RowSubProblemDampedNewton.h>
 #include <sparten/spartenUtils.h>
 #include <sparten/spartenBlas.h>
-#include <iomanip>
+
 // TODO The cleanest way to get rid of these macros??
 #ifndef KOKKOS_ENABLE_CUDA
 #define reset_timer(timer) timer.reset()

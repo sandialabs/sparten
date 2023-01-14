@@ -88,11 +88,14 @@ protected:
   SubIdx _nOuterIter;                                               //!< Number of outer iterations performed
   SubIdx _nInnerIter;                                               //!< Number of inner iterations performed, total
   SubIdx _nInnerIterDim;                                            //!< Number of inner iterations performed, per dim, per outer iteration
+  SubIdx _nFlops;                                                   //!< Number of FLOPS performed, total
   KruskalValue _tolerance;                                          //!< Stop tolerance for convergence criteria
   KruskalValue _offsetTolerance;                                    //!< Values less than this tolerance may be offset /// \todo again, what is slackness?
   KruskalValue _offsetValue;                                        //!< Values to offset inaddmissible zeros (or nearly zeros)
   KruskalValue _eps;                                                //!< Minimum value for division to protect against division-by-zero
   KruskalValue _errorNorm;                                          //!< KKT error (Can be used for outer loop convergence determination. Although, it wasn't actually used in TTB_cpp.)
+  KruskalValue _objective_func_value;                               //!< Objective Function Value
+  KruskalValue _outerLoopTimerSeconds;                              //!< Outer loop timer
 #if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_USE_CUDA_UVM)
   Kokkos::View<KruskalValue *, Kokkos::Device<Kokkos::Cuda, Kokkos::CudaSpace>> _eps_dev;
 #else

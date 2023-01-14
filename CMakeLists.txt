@@ -13,7 +13,7 @@
 ## Government retains certain rights in this software.
 ## ************************************************************************
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.16)
 
 project(Sparten CXX C)
 
@@ -33,12 +33,31 @@ SET(Kokkos_ENABLE_OPENMP OFF CACHE BOOL "Use Kokkos OpenMP backend")
 IF(Kokkos_ENABLE_CUDA)
   SET(Kokkos_ENABLE_CUDA_LAMBDA ON CACHE BOOL "Enable CUDA_LAMBDA")
 ENDIF()
-add_subdirectory(tpl)
+
+
+##############################################################################
+# GoogleTest
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG release-1.12.1
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
+
+
+##############################################################################
+# Third Party Libraries (Kokkos)
+add_subdirectory(${Sparten_SOURCE_DIR}/tpl)
+
 
 ##############################################################################
 # SparTen version number
 SET(SPARTEN_MAJOR_VERSION 1)
-SET(SPARTEN_MINOR_VERSION 0)
+SET(SPARTEN_MINOR_VERSION 1)
 SET(SPARTEN_BUILD_VERSION "0")
 SET(SPARTEN_VERSION
   "${SPARTEN_MAJOR_VERSION}.${SPARTEN_MINOR_VERSION}.${SPARTEN_BUILD_VERSION}")
@@ -103,7 +122,7 @@ file(GLOB SPARTEN_SOURCES sparten/*.cpp sparten/*.c sparten/eti/*.cpp)
 # Remove Newton methods on GPU for now
 # Comment the following lines of code when dev/testing CUDA + Newton
 if(Kokkos_ENABLE_CUDA)
-  LIST(REMOVE_ITEM SPARTEN_SOURCES 
+  LIST(REMOVE_ITEM SPARTEN_SOURCES
     #${PROJECT_SOURCE_DIR}/sparten/CpAprDampedNewton.cpp
     ${PROJECT_SOURCE_DIR}/sparten/CpAprQuasiNewton.cpp
     ${PROJECT_SOURCE_DIR}/sparten/CpRowSubProblem.cpp
@@ -113,18 +132,18 @@ endif()
 if(DEFINED ENV{CRAYPE_VERSION})
 add_library(sparten ${SPARTEN_SOURCES})
 target_link_libraries(
-  sparten 
+  sparten
   kokkos
   )
 else( )
 add_library(sparten ${SPARTEN_SOURCES})
 target_link_libraries(
-  sparten 
+  sparten
   kokkos
 )
 endif( )
 
-target_include_directories(  
+target_include_directories(
   sparten
   PUBLIC driver
   PUBLIC ${Sparten_SOURCE_DIR}
@@ -205,13 +224,14 @@ SET(SPARTEN_SOURCES_UNIT
   test/unit_test/SparseTensorUnitTest.cpp
   test/unit_test/SpartenUtilsUnitTest.cpp
   test/unit_test/unitTestMain.cpp
-)
+  test/unit_test/CommandLineOptionsUnitTest.cpp
+  )
 #message(${SPARTEN_SOURCES_UNIT})
 add_executable(
   Sparten_unit_test
   ${SPARTEN_SOURCES_UNIT}
   )
-  
+
 # Build Sparten regression tests.
 SET(SPARTEN_SOURCES_REGRESSION
   test/regression_test/AsciiIORegressionTest.cpp
@@ -245,7 +265,7 @@ target_link_libraries(
   sparten
   sparten_generator
   )
-  
+
 else( )
 target_link_libraries(
   Sparten_unit_test
@@ -258,7 +278,7 @@ target_link_libraries(
   gtest
   sparten
   sparten_generator
-  ) 
+  )
 endif(  )
 
 if (Kokkos_ENABLE_CUDA)
@@ -286,22 +306,21 @@ find_package(Doxygen)
   )
 endif(DOXYGEN_FOUND)
 
+##############################################################################
 # CODE COVERAGE
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-  #set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/maintenance)
   if(CMAKE_COMPILER_IS_GNUCXX)
     message ("Setting up coverage")
-    if(EXISTS "${PROJECT_SOURCE_DIR}/maintenance/CodeCoverage.cmake")
-      include(${PROJECT_SOURCE_DIR}/maintenance/CodeCoverage.cmake)
-      set(COVERAGE_EXCLUDES '/usr/include/*' 'tpl/*' 'test/*') 
-      setup_target_for_coverage(NAME ${PROJECT_NAME}_coverage EXECUTABLE Sparten_unit_test)
-      target_link_libraries(Sparten_unit_test gcov)
-      message ("CoveCoverage support available")
-    else( )
-      message ("CoveCoverage support not available")
-    endif()
-   endif(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_C_FLAGS_COVERAGE "-g -O0 --coverage")
+    set(CMAKE_CXX_FLAGS_COVERAGE "-g -O0 --coverage")
+    link_libraries(gcov)
+    target_link_libraries(Sparten_unit_test gcov)
+    target_link_libraries(Sparten_regression_test gcov)    
+  else( )
+    message ("Code coverage support not available (must use GCC compiler)")
+  endif(CMAKE_COMPILER_IS_GNUCXX)
 endif(CMAKE_BUILD_TYPE STREQUAL "Coverage")
+
 
 set(PRINT_VARS 1)
 if(PRINT_VARS)

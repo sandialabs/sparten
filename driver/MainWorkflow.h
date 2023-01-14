@@ -22,8 +22,9 @@
 
 #pragma once
 
-#include <SimpleInput.h>
+#include <sparten/SimpleInput.h>
 #include <sparten/AsciiIO.h>
+#include <sparten/CommandLineOptions.h>
 #include <sparten/CpAprBase.h>
 #include <sparten/CpAprMultiplicativeUpdate.h>
 #include <sparten/PrecisionTraits.h>
@@ -39,7 +40,7 @@
 
 template<typename SparseValue, typename KruskalValue, typename ElemIdx, typename SubIdx>
 void cpApr_compute(
-  CommandLineOptions const &clo,
+  sparten::CommandLineOptions const &clo,
   sparten::KruskalTensor<KruskalValue, SubIdx>& kruskalOutput,
   sparten::SparseTensor<SparseValue, ElemIdx, SubIdx> const& sparseInput
 )
@@ -122,7 +123,7 @@ void cpApr_compute(
 class MainWorkflow
 {
 public:
-  MainWorkflow(CommandLineOptions clo)
+  MainWorkflow(sparten::CommandLineOptions clo)
   {
     if (clo.sparseValueType.compare("int32") == 0 && clo.kruskalValueType.compare("float") == 0 && clo.globalOrdinalType.compare("int32") == 0 && clo.localOrdinalType.compare("int32") == 0)
     {
@@ -165,12 +166,9 @@ public:
 
 private:
   template<typename SparseValue, typename KruskalValue, typename ElemIdx, typename SubIdx>
-  void mainRoutine(CommandLineOptions clo)
+  void mainRoutine(sparten::CommandLineOptions clo)
   {
     sparten::Log &log = sparten::Log::new_log();
-
-//    SimpleInput input(clo.inputOptions, SimpleInput::READ);
-//    InputOptions inputOptions = input.read();
 
     sparten::SparseTensor<SparseValue, ElemIdx, SubIdx> *sparseTensor = nullptr;
     // Timer
@@ -178,65 +176,107 @@ private:
     std::chrono::duration<double> elapsed_seconds;
 
     start = std::chrono::system_clock::now();
-    log.print("Loading input file ...", sparten::Log::DEBUG_0);
-    std::cout << "Loading sparse Tensor\n";
-    auto *asciiInput = new sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>(clo.workingPath + "/" + clo.inputFile, sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::READ, sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::FIXED_PRECISION, clo.precision, sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::INDEX_1);
+    log.print("Loading input file ...", sparten::Log::DEBUG_1);
+
+    auto *asciiInput =
+      new sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>(clo.inputFile,
+                                                                       sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::READ,
+                                                                       sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::FIXED_PRECISION,
+                                                                       clo.precision,
+                                                                       sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::INDEX_1);
     sparseTensor = asciiInput->read();
     delete asciiInput;
+
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
-    log.print("Loading input file ... completed (" + std::to_string(elapsed_seconds.count()) + ")", sparten::Log::DEBUG_0);
-    std::cout << "Creating Kruskal Tensor\n";
-    start = std::chrono::system_clock::now();
-    log.print("Initializing solution ...", sparten::Log::DEBUG_0);
-    auto *kruskalTensor = new sparten::KruskalTensor<KruskalValue, SubIdx>(sparseTensor->get_nDim(), clo.nComponent, sparseTensor->get_size_dim());
-    sparten::KruskalTensorInitializer<KruskalValue, SubIdx> kruskalInit;
-    if(!clo.randomSeed.empty())
-    {
-      kruskalInit.set_random_seed(std::stoi(clo.randomSeed));
+    log.print("\tCompleted (" + std::to_string(elapsed_seconds.count()) + " s)", sparten::Log::DEBUG_1);
+
+    // Print attributes of sparse input.
+    log.print("Sparse input attributes:",sparten::Log::DEBUG_1);
+	log.print("  Number of dimensions: " + std::to_string(sparseTensor->get_nDim()), sparten::Log::DEBUG_1);
+	log.print("  Number of nonzeros: " + std::to_string(sparseTensor->get_nElement()), sparten::Log::DEBUG_1);
+
+	for (auto dim : sparseTensor->get_dim())
+	{
+		  log.print("  Size mode " + std::to_string(static_cast<uint32_t>(dim)) + ": " + std::to_string(sparseTensor->get_size_dim()[dim]),
+                    sparten::Log::DEBUG_1);
+	}
+
+	// Read in initial guess if provided or construct a random guess if not
+	start = std::chrono::system_clock::now();
+	sparten::KruskalTensor<KruskalValue, SubIdx> *kruskalTensor;
+
+    if (!clo.init_file.empty())
+    { // Read in initial guess
+	    log.print("\nLoading initial guess ktensor file ...", sparten::Log::DEBUG_1);
+			auto *asciiKruskalInput =
+        new sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>(clo.init_file,
+                                                                         sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::READ,
+                                                                         sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::FIXED_PRECISION,
+                                                                         clo.precision,
+                                                                         sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::INDEX_1);
+	    kruskalTensor = asciiKruskalInput->read_ktensor();
+	    delete asciiKruskalInput;
     }
-    kruskalInit.initialize(*kruskalTensor, sparten::KruskalTensorInitializer<KruskalValue, SubIdx>::RANDOM);
-    end = std::chrono::system_clock::now();
-    elapsed_seconds = end - start;
-    log.print("Initializing solution ... completed (" + std::to_string(elapsed_seconds.count()) + ")", sparten::Log::DEBUG_0);
-    log.print("nDim: " + std::to_string(sparseTensor->get_nDim()), sparten::Log::RELEASE);
-    log.print("NNZ: " + std::to_string(sparseTensor->get_nElement()), sparten::Log::RELEASE);
-    for(auto dim : sparseTensor->get_dim())
-    {
-      log.print("Size Mode " + std::to_string(static_cast<uint32_t>(dim)) + ": " + std::to_string(sparseTensor->get_size_dim()[dim]), sparten::Log::RELEASE);
+    else
+    { // Initialize random guess
+	    log.print("\nInitializing random guess ...", sparten::Log::DEBUG_1);
+
+	    kruskalTensor =
+        new sparten::KruskalTensor<KruskalValue, SubIdx>(sparseTensor->get_nDim(),
+                                                         clo.nComponent,
+                                                         sparseTensor->get_size_dim());
+
+	    sparten::KruskalTensorInitializer<KruskalValue, SubIdx> kruskalInit;
+		kruskalInit.set_random_seed(clo.randomSeed);
+	    kruskalInit.initialize(*kruskalTensor, sparten::KruskalTensorInitializer<KruskalValue, SubIdx>::RANDOM);
     }
 
-    log.print("-----Kruskal Tensor-----", sparten::Log::DEBUG_3);
+	end = std::chrono::system_clock::now();
+	elapsed_seconds = end - start;
+	log.print("\tCompleted (" + std::to_string(elapsed_seconds.count()) + "s)\n", sparten::Log::DEBUG_1);
+
+    log.print("---------- Kruskal Tensor ----------\n", sparten::Log::DEBUG_3);
     log.print(kruskalTensor->show(), sparten::Log::DEBUG_3);
-    log.print("-----Kruskal Tensor-----", sparten::Log::DEBUG_3);
+    log.print("---------- Kruskal Tensor ----------", sparten::Log::DEBUG_3);
     log.print("", sparten::Log::DEBUG_3);
 #if 0
     log.print("-----Sparse Tensor-----", sparten::Log::DEBUG_3);
-    log.print(clo.logVerbosity.compare("DEBUG_3") == 0 ? sparseTensor->show() : "", sparten::Log::DEBUG_3);
+    log.print(clo.print_level.compare("DEBUG_3") == 0 ? sparseTensor->show() : "", sparten::Log::DEBUG_3);
     log.print("-----Sparse Tensor-----", sparten::Log::DEBUG_3);
 #endif
 
     start = std::chrono::system_clock::now();
-    log.print("Iterating improved solution ...", sparten::Log::DEBUG_0);
     cpApr_compute<SparseValue, KruskalValue, ElemIdx, SubIdx>(clo, *kruskalTensor, *sparseTensor);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
-    log.print("Iterating improved solution ... completed (" + std::to_string(elapsed_seconds.count()) + ")", sparten::Log::DEBUG_0);
+    log.print("\nCompleted (" + std::to_string(elapsed_seconds.count()) + ")\n", sparten::Log::DEBUG_1);
 
-    start = std::chrono::system_clock::now();
-    log.print("Writing results to file ...", sparten::Log::DEBUG_0);
-    auto *asciiOutput = new sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>(clo.workingPath + "/" + clo.outputFile, sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::OVERWRITE, sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::SCIENTIFIC, clo.precision, sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::INDEX_1);
-    asciiOutput->write(*kruskalTensor);
-    asciiOutput->close_file();
-    delete asciiOutput;
-    end = std::chrono::system_clock::now();
-    elapsed_seconds = end - start;
-    log.print("Writing results to file ... completed (" + std::to_string(elapsed_seconds.count()) + ")", sparten::Log::DEBUG_0);
+    if (clo.outputFile != "")
+    {
+        start = std::chrono::system_clock::now();
+        log.print("\nWriting results to file ...", sparten::Log::VERBOSE);
+        auto *asciiOutput =
+                new sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>(clo.outputFile,
+                                                                                 sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::OVERWRITE,
+                                                                                 sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::SCIENTIFIC,
+                                                                                 clo.precision,
+                                                                                 sparten::AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::INDEX_1);
+        asciiOutput->write(*kruskalTensor);
+        asciiOutput->close_file();
+        delete asciiOutput;
+
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        log.print("    Completed (" + std::to_string(elapsed_seconds.count()) + ")\n", sparten::Log::VERBOSE);
+    }
+
+    delete kruskalTensor;
+
   }
 
-
   template<typename SparseValue, typename KruskalValue, typename ElemIdx, typename SubIdx>
-  sparten::CpAprBase<SparseValue, KruskalValue, ElemIdx, SubIdx> *cpApr_select(CommandLineOptions const &clo)
+  sparten::CpAprBase<SparseValue, KruskalValue, ElemIdx, SubIdx> *cpApr_select(sparten::CommandLineOptions const &clo)
   {
     if (clo.solver.compare("Multiplicative-Update") == 0)
     {

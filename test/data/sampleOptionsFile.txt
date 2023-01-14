@@ -12,5 +12,22 @@
 ## (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 ## Government retains certain rights in this software.
 ## ************************************************************************
-
-add_subdirectory(kokkos)
+tolerance 1e-4
+max-outer-iter 20
+max-inner-iter 10
+offset 1e-2
+offset-tolerance 1e-10
+progress-interval 1
+eps 1e-10
+precision 16
+num-components 5
+solver Multiplicative-Update
+input-file test/data/cpapr_test_10x10x10_1e+06/tensor.txt
+output-file tensor.out
+local-ordinal-type int32
+global-ordinal-type int32
+sparse-value-type int32
+kruskal-value-type float
+print-level release
+index-style 1
+random-seed 1693

@@ -27,7 +27,6 @@
 #include <Kokkos_Core.hpp>
 #include <cstdio>
 #include <iostream>
-#include <iomanip>
 #include <stdexcept>
 
 namespace sparten
@@ -281,6 +280,22 @@ void CpAprBaseCaller_offset_parallelRegion2(
       }
     });
   });
+
+  // // Get the number of elements that were scooched
+  // Kokkos::parallel_reduce("Sparten::offset::get_nScooched",
+  //                         Kokkos::TeamPolicy<>(kruskal_nRow, teamSize), 
+  //                         KOKKOS_LAMBDA(Kokkos::TeamPolicy<>::member_type thread, SubIdx &cout) {
+                            
+  //                           const auto iMode = thread.league_rank();
+  //                           SubIdx cin = 0;
+  //                           Kokkos::parallel_reduce(Kokkos::ThreadVectorRange(thread, kruskal_nColumn),
+  //                           [&](SubIdx iComp, SubIdx &lc) {
+  //                             if ((tmpPhi(iMode,iComp > 1.0) && (tmpFactorMatrixRead(iMode, iComp) < offsetTolerance))) {
+  //                               lc += 1;
+  //                             }
+  //                           }, cin);
+  //                           cout += cin;
+  //                         }, offsetCount);
 }
 
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
@@ -296,6 +311,7 @@ void CpAprBase<SparseValue, KruskalValue, ElemIdx, SubIdx>::offset(KruskalTensor
 
   ElemIdx offsetCount = 0;
   CpAprBaseCaller_offset_parallelRegion1<SparseValue, KruskalValue, ElemIdx, SubIdx>(offsetCount, kruskalInput.get_factor_matrix_nRow(iDim), kruskalInput.get_factor_matrix_nColumn(iDim), tmpFactorMatrixRead, tmpPhi, offsetValue, offsetTolerance);
+  this->_nFlops += offsetCount;
 
   _isOffset = offsetCount != 0;
 
@@ -384,20 +400,19 @@ void CpAprBase<SparseValue, KruskalValue, ElemIdx, SubIdx>::progress() const
 {
   Log &log = Log::new_log();
 
-  std::stringstream message_debug0;
-  message_debug0 /*<< method*/ << "::Progress:" << std::endl;
-  message_debug0 << "\tNumber of iterations completed = " << _nOuterIter << std::endl;
-  message_debug0 << "\tSolution Converged = " << (_isConverged ? "true" : "false");
-  message_debug0 << "\tKKT Violation " << std::scientific << _errorNorm;
-  message_debug0 << "\tNumber of nonzero violations " << _numNonzeroViolations;
-  message_debug0 << "\tTolerance = " << _tolerance << std::endl;
-  message_debug0 << "\tMaximum number of outer iterations = " << _maxOuterIter << std::endl;
-  message_debug0 << "\tMaximum number of inner iterations = " << _maxInnerIter << std::endl;
-  message_debug0 << "\tOffset = " << _offsetValue << std::endl;
-  message_debug0 << "\tOffset tolerance= " << _offsetTolerance << std::endl;
-  message_debug0 << "\tProgress Interval = " << _progressInterval << std::endl;
-  message_debug0 << "\teps = " << _eps << std::endl;
-  log.print(message_debug0.str(), Log::DEBUG_0);
+  std::stringstream message;
+  message << "\tNumber of iterations completed = " << _nOuterIter << std::endl;
+  message << "\tSolution Converged = " << (_isConverged ? "true" : "false") << std::endl;
+  message << "\tKKT Violation " << std::scientific << _errorNorm << std::endl;
+  message << "\tNumber of nonzero violations " << _numNonzeroViolations << std::endl;
+  message << "\tTolerance = " << _tolerance << std::endl;
+  message << "\tMaximum number of outer iterations = " << _maxOuterIter << std::endl;
+  message << "\tMaximum number of inner iterations = " << _maxInnerIter << std::endl;
+  message << "\tOffset = " << _offsetValue << std::endl;
+  message << "\tOffset tolerance= " << _offsetTolerance << std::endl;
+  message << "\tProgress Interval = " << _progressInterval << std::endl;
+  message << "\teps = " << _eps << std::endl;
+  log.print(message.str(), Log::DEBUG_1);
 }
 
 // Explicit instantiation

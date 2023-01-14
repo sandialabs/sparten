@@ -25,6 +25,7 @@
 #include <Kokkos_Core.hpp>
 #include <iostream>
 #include <sstream>
+#include <Sparten_Configure.h>
 
 namespace regressionTest
 {

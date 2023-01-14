@@ -30,7 +30,6 @@
 #include <sparten/PrecisionTraits.h>
 #include <Kokkos_Core.hpp>
 #include <sstream>
-#include <iomanip>
 
 namespace sparten {
 
@@ -135,7 +134,13 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
 
   Log &log = Log::new_log();
 
-  // readability aliases:
+  std::cout << std::setfill('-');
+  std::cout << std::setw(70);
+  std::cout << std::left;
+  if (log.get_verbosity() > 1)
+      std::cout << std::setw(90);
+  std::cout << "------------------------- CP-APR Quasi-Newton " << std::endl;
+
   auto nElement = sparseInput.get_nElement();
   auto nComp = kruskalOutput.get_nComponent();
   auto nDim = sparseInput.get_nDim();
@@ -148,7 +153,8 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
   {
     Kokkos::Timer checkRequirementsTimer;
     base_t::check_requirements(kruskalOutput, sparseInput);
-    log.print("CpAprQuasiNewton::check_requirements: " + std::to_string(checkRequirementsTimer.seconds()) + " s", Log::RELEASE);
+    log.print("CpAprQuasiNewton::check_requirements: " + std::to_string(checkRequirementsTimer.seconds()) + " s",
+              Log::DEBUG_3);
   }
 
   // allocate pi
@@ -170,7 +176,7 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
 	std::vector<sub_index_t > min_nonz_per_row(nDim);
 	std::vector<kruskal_value_t > mean_nonz_per_row(nDim);
 	std::vector<kruskal_value_t > stdev_nonz_per_row(nDim);
-	std::stringstream message_release;
+	std::ostringstream message_release;
 	message_release << "\nSparse Tensor Nonzeros Per Row";
    for(sub_index_t iDim = 0; iDim < nDim; ++iDim) {
 
@@ -254,7 +260,19 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
    _config, kruskal_info, sparse_tensor_info.max_nonzeros_per_row
   );
 
-	kruskal_value_t outerLoopTime = 0;
+  std::ostringstream msg;
+  msg << "  i";
+  msg << "         kkt-violation";
+  msg << "          -log-likelihood";
+  msg << "      time (s)";
+  if (log.get_verbosity() > 1)
+  {
+      msg << "  inner iters";
+      msg << "   func evals";
+  }
+  log.print(msg.str(), Log::RELEASE);
+
+  kruskal_value_t outerLoopTime = 0;
   while(outer_iter < _config.max_outer_iterations && not converged)
   {
   	Kokkos::Timer outerLoopTimer;
@@ -370,7 +388,6 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
 	    _log_progress(outer_iter, inner_iters, func_evals, errorNorm, obj, outerLoopTime);
     }
   }
-
   {
     // TODO get this timing data some other way; it won't be accurate here without an unnecessary Kokkos::fence()
     //auto _ = ScopedTimerContribution(timing_data.normalize);
@@ -383,12 +400,17 @@ QuasiNewtonCpApr<NumericTypes>::_compute_with_policy(
     kruskalOutput.permute_factor_matrix_columns();
   }
 
-
   computeTime+=cpAprTimer.seconds();
+
+  // Final logging
   _log_summary(outer_iter, inner_iters, func_evals, errorNorm, obj, timing_data.row.time_elapsed,
 	             timing_data.row.compute_phi, timing_data.row.search_direction,
 	             timing_data.row.line_search, piTime,computeTime,
 	             max_nonz_per_row, min_nonz_per_row, mean_nonz_per_row, stdev_nonz_per_row);
+  std::cout << "----------------------------------------------------------------------";
+  if (log.get_verbosity() > 1)
+        std::cout << "--------------------";
+  std::cout << std::endl;
 }
 
 //==============================================================================
@@ -405,18 +427,44 @@ void QuasiNewtonCpApr<NumericalTypes>::_log_progress(
 {
   Log &log = Log::new_log();
 
-  std::stringstream message_release;
-  message_release << "Iter " << std::setfill(' ') << std::setw(4) << outer_iter;
-  message_release << ": Inner Its = " << std::setfill(' ') << std::setw(12) << inner_iter;
-  message_release << ", Function Evals = " << std::setfill(' ') << std::setw(12) << func_evals;
-  message_release << ", KKT Violation = " << std::scientific << std::setprecision(16) << error_norm;
-  message_release << ", Log Likelihood = " << std::scientific << std::setprecision(16) << obj;
-  message_release << ", Elapsed Time (s) = " << std::fixed << std::setprecision(3) << loopTimer;
+  std::ostringstream message_release;
+  message_release << std::setfill(' ')
+                  << std::right
+                  << std::setw(5) << outer_iter
+                  << "  " << std::scientific << std::setprecision(16) << error_norm
+                  << "  " << std::scientific << std::setprecision(16) << obj
+                  << "  " << std::scientific << std::setprecision(3) << loopTimer;
+  if (log.get_verbosity() > 1)
+  {
+      message_release << " " << std::setfill(' ') << std::setw(12) << inner_iter;
+      message_release << " " << std::setfill(' ') << std::setw(12) << func_evals;
+  }
   log.print(message_release.str(), Log::RELEASE);
-
-
-  // TODO debug mode logging
 }
+
+//==============================================================================
+
+template <class NumericalTypes>
+void QuasiNewtonCpApr<NumericalTypes>::_log_history(
+	sub_index_t outer_iter,
+	element_index_t inner_iter,
+	element_index_t func_evals,
+	kruskal_value_t error_norm,
+	kruskal_value_t obj,
+	kruskal_value_t loopTimer
+) const {
+	Log &log = Log::new_log();
+
+	std::ostringstream message_release;
+	message_release << outer_iter;
+	message_release << "," << inner_iter;
+	message_release << "," << func_evals;
+	message_release << "," << std::scientific << std::setprecision(16) << error_norm;
+	message_release << "," << std::scientific << std::setprecision(16) << obj;
+	message_release << "," << std::fixed << std::setprecision(3) << loopTimer;
+	log.print(message_release.str(), Log::RELEASE);
+}
+
 //==============================================================================
 
 template <class NumericalTypes>
@@ -440,27 +488,28 @@ void QuasiNewtonCpApr<NumericalTypes>::_log_summary(
 {
 	Log &log = Log::new_log();
 
-	std::stringstream message_release;
-	message_release << "\n" << std::string(31, ' ') << "PQNR STATS" << std::string(31,' ');
-	message_release << "\n" << std::string(72, '=');
-	message_release << "\nFinal Log Likelihood                                    " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << obj;
-	message_release << "\nFinal KKT Violation                                     " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << error_norm;
-	message_release << "\nTotal Outer Iterations                                  " << std::right << std::setfill(' ') << std::setw(16) << outer_iter;
-	message_release << "\nTotal Inner Iterations                                  " << std::right << std::setfill(' ') << std::setw(16) << inner_iter;
-	message_release << "\nTotal Function Evaluations                              " << std::right << std::setfill(' ') << std::setw(16) << func_evals;
-	message_release << "\nTotal Time PDNR.compute() (s)                           " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << computeTime;
-	message_release << "\nTotal Time Pi (s)                                       " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << piTime;
-	message_release << "\nTotal Time Phi (s)                                      " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << compute_phi;
-	message_release << "\nTotal Time Perform Line Search (s)                      " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << line_search;
+	std::ostringstream message_release;
+	message_release << "\nAdvanced stats";
+	message_release << "\n--------------";
+	message_release << "\nFinal Log Likelihood: " << std::setw(16) << std::setprecision(9) << obj;
+	message_release << "\nFinal KKT Violation: " << std::setw(16) << std::setprecision(9) << error_norm;
+	message_release << "\nTotal Outer Iterations: " << std::setw(16) << outer_iter;
+	message_release << "\nTotal Inner Iterations: " << std::setw(16) << inner_iter;
+	message_release << "\nTotal Function Evaluations: " << std::setw(16) << func_evals;
+	message_release << "\nTotal Time PDNR.compute() (s): " << std::setw(16) << std::setprecision(9) << computeTime;
+	message_release << "\nTotal Time Pi (s): " << std::setw(16) << std::setprecision(9) << piTime;
+	message_release << "\nTotal Time Phi (s): " << std::setw(16) << std::setprecision(9) << compute_phi;
+	message_release << "\nTotal Time Perform Line Search (s): " << std::setw(16) << std::setprecision(9) << line_search;
 #ifndef KOKKOS_ENABLE_CUDA
-	message_release << "\nAverage Time per Thread Row Subproblem (s)              " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << elapsed_time;
-	message_release << "\nAverage Time per Thread Compute Search Directions (s)   " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << search_direction;
+	message_release << "\nAverage Time per Thread Row Subproblem (s): " << std::setw(16) << std::setprecision(9) << elapsed_time;
+	message_release << "\nAverage Time per Thread Compute Search Directions (s): " << std::setw(16) << std::setprecision(9) << search_direction;
 #else
-	message_release << "\nTotal Time Row Subproblem (s)                           " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << elapsed_time;
-	message_release << "\nTotal Time Compute Search Directions (s)                " << std::right << std::setfill(' ') << std::setw(16) << std::setprecision(9) << search_direction;
+	message_release << "\nTotal Time Row Subproblem (s) " << std::setw(16) << std::setprecision(9) << elapsed_time;
+	message_release << "\nTotal Time Compute Search Directions (s) " << std::setw(16) << std::setprecision(9) << search_direction;
 #endif
 	message_release << std::endl;
-	message_release << "\nNonzeros Per Row\n";
+	message_release << "\nNonzeros Per Row";
+	message_release << "\n----------------\n";
 	message_release << std::left << std::setw(6) << "Mode";
 	message_release << std::right << std::setw(8) << "Max";
 	message_release << std::right << std::setw(8) << "Min";
@@ -475,10 +524,9 @@ void QuasiNewtonCpApr<NumericalTypes>::_log_summary(
 		message_release << std::right << std::setfill(' ') << std::setw(25) << mean_nonz_per_row[i];
 		message_release << std::right << std::setfill(' ') << std::setw(25) << stdev_nonz_per_row[i];
 	}
-	message_release << "\n" << std::string(72, '=');
 	message_release << std::endl;
 
-	log.print(message_release.str(), Log::RELEASE);
+	log.print(message_release.str(), Log::DEBUG_1);
 }
 //==============================================================================
 

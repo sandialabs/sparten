@@ -24,7 +24,6 @@
 #include <sparten/Log.h>
 #include <Kokkos_Core.hpp>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -131,7 +130,7 @@ void AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::open_file(Access mode)
   }
   else
   {
-    log.print("Opening ASCII file: " + _filename, Log::RELEASE);
+    log.print("\tOpening ASCII file: " + _filename, Log::DEBUG_1);
     _isFileOpen = true;
   }
 }
@@ -145,7 +144,7 @@ void AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::close_file()
   {
     _file.close();
     _isFileOpen = false;
-    log.print("Closing ASCII file: " + _filename, Log::RELEASE);
+    log.print("\tClosing ASCII file: " + _filename, Log::DEBUG_1);
   }
   else
   {
@@ -157,7 +156,7 @@ template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 SparseTensor<SparseValue, ElemIdx, SubIdx> *AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::read()
 {
   Log &log = Log::new_log();
-  log.print("Reading ASCII file: " + _filename, Log::RELEASE);
+  log.print("\tReading ASCII file: " + _filename, Log::DEBUG_1);
 
   SparseTensor<SparseValue, ElemIdx, SubIdx> *sparseOutput = nullptr;
 
@@ -199,7 +198,7 @@ SparseTensor<SparseValue, ElemIdx, SubIdx> *AsciiIO<SparseValue, KruskalValue, E
   // Move Data to the device memory
   sparseOutput->copy_to_device(); 
 #endif
-  log.print("Done reading ASCII file: " + _filename, Log::RELEASE);
+  log.print("\tDone reading ASCII file: " + _filename, Log::DEBUG_1);
   return sparseOutput;
 }
 
@@ -207,7 +206,7 @@ template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 SparseTensor<SparseValue, ElemIdx, SubIdx> AsciiIO<SparseValue, KruskalValue, ElemIdx, SubIdx>::read_sptensor()
 {
   Log &log = Log::new_log();
-  log.print("Reading ASCII file: " + _filename, Log::RELEASE);
+  log.print("\tReading ASCII file: " + _filename, Log::DEBUG_1);
 
   readHeaderData();
 
@@ -246,7 +245,7 @@ SparseTensor<SparseValue, ElemIdx, SubIdx> AsciiIO<SparseValue, KruskalValue, El
   // Move Data to the device memory
   sparseOutput.copy_to_device();
 #endif
-  log.print("Done reading ASCII file: " + _filename, Log::RELEASE);
+  log.print("\tDone reading ASCII file: " + _filename, Log::DEBUG_1);
   return sparseOutput;
 }
 

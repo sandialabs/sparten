@@ -27,6 +27,7 @@
 #include <Kokkos_Core.hpp>
 #include <iostream>
 #include <sstream>
+#include <Sparten_Configure.h>
 
 namespace unitTest
 {
@@ -189,8 +190,17 @@ TEST_F(FactTestSetGeneratorUnitTest, test_with_io_sparsetensor_integer)
   testFactors = _testGen->genNoisedNonNegativeKruscalTensor(0.2, 0.05);
   spTensor = _testGen->genSparseTensor( testFactors );
 
-  SpartenIO myIO1("test/ktensor.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
-  SpartenIO myIO2("test/sptensor.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
+  SpartenIO myIO1(SPARTEN_TEST_DIR "/test/ktensor.txt",
+                  SpartenIO::OVERWRITE,
+                  SpartenIO::SCIENTIFIC,
+                  16,
+                  SpartenIO::INDEX_1);
+  SpartenIO myIO2(SPARTEN_TEST_DIR "/test/sptensor.txt",
+                  SpartenIO::OVERWRITE,
+                  SpartenIO::SCIENTIFIC,
+                  16,
+                  SpartenIO::INDEX_1);
+
   myIO1.write(*testFactors);
   myIO2.write(*spTensor);
   myIO1.close_file();
@@ -198,8 +208,18 @@ TEST_F(FactTestSetGeneratorUnitTest, test_with_io_sparsetensor_integer)
 
   sparten::KruskalTensor<double, sparten::type::SubIdx> *testFactorsFromFile = nullptr;
   sparten::SparseTensor<sparten::type::SubIdx, sparten::type::SubIdx, sparten::type::SubIdx> *spTensorFromFile = nullptr;
-  SpartenIO myIO3("test/sptensor.txt", SpartenIO::READ, SpartenIO::SCIENTIFIC, 16,SpartenIO::INDEX_1 );
-  SpartenIO myIO4("test/ktensor.txt", SpartenIO::READ, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
+
+  SpartenIO myIO3(SPARTEN_TEST_DIR "/test/sptensor.txt",
+                  SpartenIO::READ,
+                  SpartenIO::SCIENTIFIC,
+                  16,
+                  SpartenIO::INDEX_1 );
+  SpartenIO myIO4(SPARTEN_TEST_DIR "/test/ktensor.txt",
+                  SpartenIO::READ,
+                  SpartenIO::SCIENTIFIC,
+                  16,
+                  SpartenIO::INDEX_1);
+
   spTensorFromFile = myIO3.read();
   testFactorsFromFile = myIO4.read_ktensor();
   myIO3.close_file();
@@ -269,8 +289,17 @@ TEST_F(FactTestSetGeneratorUnitTest, test_with_io_sparsetensor_integer)
     ASSERT_EQ(result,true);
   }
 
-  SpartenIO myIO5("test/ktensor_verify.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
-  SpartenIO myIO6("test/sptensor_verify.txt", SpartenIO::OVERWRITE, SpartenIO::SCIENTIFIC, 16, SpartenIO::INDEX_1);
+  SpartenIO myIO5(SPARTEN_TEST_DIR "/test/ktensor_verify.txt",
+                  SpartenIO::OVERWRITE,
+                  SpartenIO::SCIENTIFIC,
+                  16,
+                  SpartenIO::INDEX_1);
+  SpartenIO myIO6(SPARTEN_TEST_DIR "/test/sptensor_verify.txt",
+                  SpartenIO::OVERWRITE,
+                  SpartenIO::SCIENTIFIC,
+                  16,
+                  SpartenIO::INDEX_1);
+
   myIO5.write(*testFactorsFromFile);
   myIO6.write(*spTensorFromFile);
   myIO5.close_file();
@@ -280,8 +309,6 @@ TEST_F(FactTestSetGeneratorUnitTest, test_with_io_sparsetensor_integer)
   delete( testFactors );
   delete( spTensorFromFile );
   delete( testFactorsFromFile );
-
-
 
 }
 

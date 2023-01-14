@@ -30,7 +30,7 @@ static const uint32_t UPPER_MASK = 0x80000000UL;   // most significant w-r bits
 static const uint32_t LOWER_MASK = 0x7fffffffUL;   // least significant r bits
 
 static uint32_t _mt[N];    // State vector
-static int32_t _mti;                    /// \todo
+static int32_t _mti;
 
 namespace sparten
 {
@@ -138,4 +138,4 @@ double RandGenMersenneTwister::generate_rand_double_matlab()
   return dResult;
 }
 
-}
+} // end namespace sparten

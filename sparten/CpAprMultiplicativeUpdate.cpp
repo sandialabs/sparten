@@ -27,11 +27,62 @@
 #include <Kokkos_Core.hpp>
 #include <cstdio>
 #include <iostream>
-#include <iomanip>
 #include <stdexcept>
 
 namespace sparten
 {
+
+template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
+KruskalValue CpAprMultiplicativeUpdate_obj_liklihood(
+    SubIdx kruskal_nRow,
+    SubIdx kruskal_nComponent,
+    NonZeroLocations<ElemIdx> &nonzLoc,
+    NonZeroLocations<SubIdx> &nonzLocIdx,
+    SubIdx iDim,
+    KruskalValue eps,
+    const FactorMatrixConst<KruskalValue> &pi,
+    const SparseDataConst<SparseValue> &spData,
+    const SubIdx sparse_nElement,
+    const SparseIndices<SubIdx> &indices,
+    const FactorMatrixConst<KruskalValue> &kData)
+{
+   Log &log = Log::new_log();
+   log.print("Entering CpApr_obj_likelihood_all", Log::DEBUG_3);
+   const auto teamSize = Kokkos::AUTO;
+   KruskalValue f=0;
+   Kokkos::parallel_reduce ( Kokkos::TeamPolicy<>(kruskal_nRow, teamSize), KOKKOS_LAMBDA (Kokkos::TeamPolicy<>::member_type team, KruskalValue &local_f)
+   {
+      const auto iRow = team.league_rank()*team.team_size() + team.team_rank();
+      if ( iRow >= kruskal_nRow ) return;
+      KruskalValue val=0;
+      Kokkos::parallel_reduce (Kokkos::ThreadVectorRange(team, kruskal_nComponent), [=] (SubIdx iComp, KruskalValue &ldVal)
+      {
+         ldVal += kData(iRow, iComp);
+      },Kokkos::Sum<KruskalValue>(val));
+      local_f += val;
+   }, Kokkos::Sum<KruskalValue>(f));
+   KruskalValue f_inner = 0;
+   Kokkos::parallel_reduce (Kokkos::TeamPolicy<>( sparse_nElement, teamSize), KOKKOS_LAMBDA (Kokkos::TeamPolicy<>::member_type team, KruskalValue &f_local_inner)
+   {
+     const auto iNnz = team.league_rank()*team.team_size() + team.team_rank();
+     if ( iNnz >=  sparse_nElement ) return;
+     const auto index = indices(iDim,iNnz);
+     KruskalValue dVal = 0;
+     Kokkos::parallel_reduce (Kokkos::ThreadVectorRange(team, kruskal_nComponent), [=] (SubIdx iComp, KruskalValue &ldVal)
+     {
+        ldVal += kData(index, iComp) *pi(iNnz, iComp);
+     }, dVal);
+
+     if ( dVal < 1e-16 ) {
+     	dVal = 1e-16;
+     }
+     f_local_inner -= static_cast<KruskalValue>(spData(iNnz)) * static_cast<KruskalValue>(DLog(static_cast<double>(dVal)));
+  }, Kokkos::Sum<KruskalValue>(f_inner));
+  Kokkos::fence();
+
+  f+=f_inner;
+  return f;
+}
 
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::CpAprMultiplicativeUpdate(
@@ -68,8 +119,12 @@ CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::~CpAprMul
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::compute(KruskalTensor<KruskalValue, SubIdx> &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput)
 {
+
   Log &log = Log::new_log();
-  log.print("Entering CpAprMultiplicativeUpdate", Log::DEBUG_3);
+  std::cout << std::setfill('-');
+  std::cout << std::setw(70);
+  std::cout << std::left;
+  std::cout << "------------------------- CP-APR Multiplicative-Update " << std::endl;
 
   Kokkos::Timer cpAprTimer;
 
@@ -94,7 +149,7 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
 
   Kokkos::Timer checkRequirementsTimer;
   this->check_requirements(kruskalOutput, sparseInput);
-  log.print("CpAprMultiplicativeUpdate::check_requirements: " + std::to_string(checkRequirementsTimer.seconds()) + " s", Log::RELEASE);
+  log.print("CpAprMultiplicativeUpdate::check_requirements: " + std::to_string(checkRequirementsTimer.seconds()) + "s", Log::DEBUG_2);
 
   Kokkos::resize(_pi, sparseInput.get_nElement(), kruskalOutput.get_nComponent());
 #if !defined(KOKKOS_ENABLE_CUDA)
@@ -117,7 +172,7 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
     Kokkos::resize(this->_nonzLocIdx(i),static_cast<int32_t>(kruskalOutput.get_factor_matrix_nRow(i) + 1));
     this->reorder(i,static_cast<int32_t>(kruskalOutput.get_factor_matrix_nRow(static_cast<SubIdx>(i))), static_cast<int32_t>(sparseInput.get_nElement()), sparseInput);
   }
-#else 
+#else
   // Current version does not let GPU to choose non-atomic code
   #if 0
   for (ElemIdx i = 0; i < this->_nonzLoc.size(); ++i)
@@ -136,6 +191,7 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
   Kokkos::Timer normalizeTimer;
   Kokkos::Timer kktErrorNormTimer;
   Kokkos::Timer permuteTimer;
+  Kokkos::Timer outerLoopTimer;
 
   double offsetTimerSeconds = 0.0;
   double distributeWeightsTimerSeconds = 0.0;
@@ -146,29 +202,73 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
   double permuteTimerSeconds = 0.0;
   double tmpTime;
   std::vector<double> computeTimePerMode(sparseInput.get_nDim());
-  for ( auto iDim : sparseInput.get_dim() ) 
+  for ( auto iDim : sparseInput.get_dim() )
   {
     computeTimePerMode[iDim] = 0;
   }
- 
+
   this->_nOuterIter = 0;
+  this->_nInnerIter = 0;
   this->_numNonzeroViolations = 0;
+  this->_outerLoopTimerSeconds = 0.0;
+  this->_nFlops = 0;
+
+  // Compute starting objective function value of initial guess
+  this->_objective_func_value =  -compute_obj( kruskalOutput, sparseInput, 0 );
+
+  // Begin print iteration history
+  std::ostringstream msg;
+  msg << "  i";
+  msg << "         kkt-violation";
+  msg << "          -log-likelihood";
+  msg << "      time (s)";
+  msg << "      total flops";
+
+  log.print(msg.str(), Log::RELEASE);
+
+  if (log.get_verbosity() > 1)
+      this->progress();
+
+  auto N = sparseInput.get_nDim();
+  auto R = kruskalOutput.get_nComponent();
+  auto nnzx = sparseInput.get_nElement();
+  SubIdx nflops;
+  SubIdx size_X_n;
+  log.print("N : " + std::to_string(N), Log::VERBOSE);
+  //std::cout << "N : " << N << std::endl;
+  log.print("R : " + std::to_string(R), Log::VERBOSE);
+  //std::cout << "R : " << R << std::endl;
+  log.print("nnzx : " + std::to_string(nnzx), Log::VERBOSE);
+  //std::cout << "nnzx : " << nnzx << std::endl;
+
   // Outer loop
   while (this->_nOuterIter < this->_maxOuterIter && !this->_isConverged)
   {
+  	outerLoopTimer.reset();
     log.print("nOuterIter: " + std::to_string(this->_nOuterIter), Log::DEBUG_1);
     this->_numNonzeroViolations = 0;
     this->_nInnerIter = 0;
     this->_isConverged = true;
+
     for (auto iDim : sparseInput.get_dim())
+
     {
       log.print("\tiDim: " + std::to_string(iDim), Log::DEBUG_1);
-      if(this->_nOuterIter > 0) {
+      size_X_n = sparseInput.get_nRow(iDim);
+
+      if(this->_nOuterIter > 0)
+      {
         offsetTimer.reset();
-        this->offset(kruskalOutput,iDim);
+        this->offset(kruskalOutput,iDim); 
+        log.print("scooching: " + std::to_string(this->_nFlops), Log::VERBOSE);
+        //std::cout << "scooching: " << this->_nFlops << std::endl;
         tmpTime =  offsetTimer.seconds();
         offsetTimerSeconds += tmpTime;
         computeTimePerMode[iDim]+=tmpTime;
+        nflops = 2*size_X_n*R + 1;
+        this->_nFlops += nflops;
+        log.print("check for complementary slackness violations: " + std::to_string(nflops), Log::VERBOSE);
+        //std::cout<< "check for complementary slackness violations: " << nflops << std::endl;
 
         if (this->_isOffset)
         {
@@ -176,20 +276,25 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
         }
       }
 
-
       distributeWeightsTimer.reset();
       kruskalOutput.distribute_weights_to_factor_matrices(iDim);
       tmpTime = distributeWeightsTimer.seconds();
       distributeWeightsTimerSeconds += tmpTime;
       computeTimePerMode[iDim] += tmpTime;
-
+      nflops = size_X_n*R;
+      this->_nFlops += nflops;
+      log.print("redistribute: " + std::to_string(nflops), Log::VERBOSE);
+      //std::cout << "redistribute: " << nflops << std::endl;
 
       computePiTimer.reset();
       compute_pi(kruskalOutput, sparseInput, iDim);
       tmpTime = computePiTimer.seconds();
-
       computePiTimerSeconds += tmpTime;
       computeTimePerMode[iDim] += tmpTime;
+      nflops = nnzx*R*(N-1);
+      this->_nFlops += nflops;
+      log.print("pi: " + std::to_string(nflops), Log::VERBOSE);
+      //std::cout << "pi: " << nflops << std::endl;
 
 #ifdef SPARTEN_CHECK_NANS
       std::cout << "NaNs present in kruskal tensor after computePi (MU method): " << (kruskalOutput.check_for_nans() ? "true" : "false") << std::endl;
@@ -198,9 +303,12 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
       // Inner loop
       SubIdx innerLoopCount = 0;
       bool localConverged = false;
+      SubIdx phi_flops = 0;
+      SubIdx conv_flops = 0;
+      SubIdx mu_flops = 0;
       while (innerLoopCount < this->_maxInnerIter && !localConverged)
       {
-	log.print("\t\tinnerLoopCount: " + std::to_string(innerLoopCount), Log::DEBUG_1);
+        log.print("\t\tinnerLoopCount: " + std::to_string(innerLoopCount), Log::DEBUG_2);
 
         // Includes computing timeComputePhi
         multiplicativeUpdateTimer.reset();
@@ -209,6 +317,11 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
         multiplicativeUpdateTimerSeconds += tmpTime;
         computeTimePerMode[iDim] += tmpTime;
         ++innerLoopCount;
+
+        phi_flops += 4*nnzx*R + nnzx - R;
+        conv_flops += 4*R*size_X_n + 1;
+        mu_flops += size_X_n*R;
+
 #ifdef SPARTEN_CHECK_NANS
          std::cout << "NaNs present in kruskal tensor after multiplicative update: " << (kruskalOutput.check_for_nans() ? "true" : "false") << std::endl;
 #endif
@@ -219,21 +332,41 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
         this->_isConverged = false;
       }
 
+      log.print("\tphi: " + std::to_string(phi_flops), Log::VERBOSE);
+      //std::cout << "\tphi: " << phi_flops << std::endl;
+      log.print("\tconvergence check: " + std::to_string(conv_flops), Log::VERBOSE);
+      //std::cout << "\tconvergence check: " << conv_flops << std::endl;
+      log.print("\tmult update: " + std::to_string(mu_flops), Log::VERBOSE);
+      //std::cout << "\tmult update: " << mu_flops << std::endl;
+      nflops = phi_flops + conv_flops + mu_flops;
+      this->_nFlops += nflops;
+
       normalizeTimer.reset();
       kruskalOutput.normalize(iDim); // using NormOne  Bring Lambda back
       tmpTime = normalizeTimer.seconds();
       normalizeTimerSeconds += tmpTime;
       computeTimePerMode[iDim] += tmpTime;
+      nflops = 3*size_X_n*R;
+      this->_nFlops += nflops;
+      log.print("normalize: " + std::to_string(nflops), Log::VERBOSE);
+      //std::cout << "normalize: " << nflops << std::endl;
 
 #ifdef SPARTEN_CHECK_NANS
       std::cout << "NaNs present in kruskal tensor after normalize (MU method): " << (kruskalOutput.check_for_nans() ? "true" : "false") << std::endl;
 #endif
     }
+	  this->_outerLoopTimerSeconds += outerLoopTimer.seconds();
+
+    // Evaluate objective function
+    kruskalOutput.distribute_weights_to_factor_matrices(0);
+    compute_pi(kruskalOutput, sparseInput, 0);
     this->update_karush_kuhn_tucker_condition_error_norm(); // using NormInf
     ++this->_nOuterIter;  // Update iteration counter
-
+	  this->_objective_func_value =  -compute_obj( kruskalOutput, sparseInput, 0 ); // Compute objective function for each mode
     if (this->_nOuterIter % this->_progressInterval == 0)
     {
+      log.print("==========\nComputational cost = " + std::to_string(this->_nFlops), Log::DEBUG_1);
+      //std::cout << "==========\nComputational cost = " << this->_nFlops << std::endl;
       this->progress();
     }
   }
@@ -245,25 +378,30 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
   permuteTimer.reset();
   kruskalOutput.permute_factor_matrix_columns();
   permuteTimerSeconds += permuteTimer.seconds();
-  // Output progress after final step
-  this->progress();
+
+  // Output progress after final step if it hasn't printed yet.
+  if (this->_nOuterIter % this->_progressInterval != 0)
+  {
+      this->progress();
+  }
+
   // Output timing information
-  log.print("CpAprMultiplicativeUpdate Execute: " + std::to_string(cpAprTimer.seconds()) + " s", Log::RELEASE);
-  log.print("\tOffset: " + std::to_string(offsetTimerSeconds) + " s", Log::RELEASE);
-  log.print("\tDistribute Weights: " + std::to_string(distributeWeightsTimerSeconds) + " s", Log::RELEASE);
-  log.print("\tCompute Pi: " + std::to_string(computePiTimerSeconds) + " s", Log::RELEASE);
-  log.print("\tMultiplicative Update: " + std::to_string(multiplicativeUpdateTimerSeconds) + " s", Log::RELEASE);
-  log.print("\tNormalize: " + std::to_string(normalizeTimerSeconds) + " s", Log::RELEASE);
-  log.print("\tKKT Error Norm: " + std::to_string(kktErrorNormTimerSeconds) + " s", Log::RELEASE);
-  log.print("\tPermute: " + std::to_string(permuteTimerSeconds) + " s", Log::RELEASE);
+  log.print("\nCP-APR Multiplicative Update total compute time: " + std::to_string(cpAprTimer.seconds()) + " s", Log::VERBOSE);
+  log.print("\tOffset: " + std::to_string(offsetTimerSeconds) + " s", Log::DEBUG_1);
+  log.print("\tDistribute Weights: " + std::to_string(distributeWeightsTimerSeconds) + " s", Log::DEBUG_1);
+  log.print("\tCompute Pi: " + std::to_string(computePiTimerSeconds) + " s", Log::DEBUG_1);
+  log.print("\tMultiplicative Update: " + std::to_string(multiplicativeUpdateTimerSeconds) + " s", Log::DEBUG_1);
+  log.print("\tNormalize: " + std::to_string(normalizeTimerSeconds) + " s", Log::DEBUG_1);
+  log.print("\tKKT Error Norm: " + std::to_string(kktErrorNormTimerSeconds) + " s", Log::DEBUG_1);
+  log.print("\tPermute: " + std::to_string(permuteTimerSeconds) + " s", Log::DEBUG_1);
 
   for ( auto iDim : sparseInput.get_dim() )
   {
     std::string msg = "\tComputing Mode " + std::to_string(iDim) + ": " + std::to_string(computeTimePerMode[iDim]) + " s";
-    log.print(msg, Log::RELEASE);
+    log.print(msg, Log::DEBUG_1);
   }
+  std::cout << "----------------------------------------------------------------------" << std::endl;
 }
-
 
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 void CpAprMultiplicativeUpdateCaller_does_violate_karush_kuhn_tucker_condition_kruskal_tensor(
@@ -282,7 +420,7 @@ void CpAprMultiplicativeUpdateCaller_does_violate_karush_kuhn_tucker_condition_k
     {
       lldMyMax = static_cast<double>(max(static_cast<double>(lldMyMax), abs(min(static_cast<double>(dKdata(iMode,iComp)), 1.0 - static_cast<double>(dPhi(iMode,iComp))))));
     },Kokkos::Max<KruskalValue>(tldMyMax));
-    
+
     ldMyMax = static_cast<double>(max(static_cast<double>(ldMyMax), static_cast<double>(tldMyMax)));
   }, Kokkos::Max<KruskalValue>(dMyMax));
 }
@@ -320,7 +458,7 @@ bool CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::does
   }
   return retval; /// \todo update this...
 }
-  
+
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 void CpAprMultiplicativeUpdateCaller_multiplicative_update(
     SubIdx kruskal_nRow,
@@ -355,13 +493,12 @@ template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 bool CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::multiplicative_update(KruskalTensor<KruskalValue, SubIdx> &kruskalOutput, SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput, SubIdx iDim)
 {
   Log &log = Log::new_log();
-  log.print("----- CpAprMultiplicativeUpdate::multiplicative_update() -----", Log::DEBUG_2);
 
   bool kktViolation = false;
 
   Kokkos::Timer computePhiTimer;
   compute_phi(kruskalOutput, sparseInput, iDim);
-  log.print("\tCpApr::multiplicative_update() compute_phi(): " + std::to_string(computePhiTimer.seconds()) + " s", Log::DEBUG_2);
+  log.print("\t\t\tCpApr::multiplicative_update() compute_phi(): " + std::to_string(computePhiTimer.seconds()) + " s", Log::DEBUG_2);
 
 #ifdef SPARTEN_CHECK_NANS
   std::cout << "NaNs present in kruskal tensor after computePhi (MU method): " << (kruskalOutput.check_for_nans() ? "true" : "false") << std::endl;
@@ -369,7 +506,7 @@ bool CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::mult
 
   Kokkos::Timer kktVioliationTimer;
   kktViolation = this->does_violate_karush_kuhn_tucker_condition(kruskalOutput, iDim);
-  log.print("\tCpApr::multiplicative_update() does_violate_karush_kuhn_tucker_condition(): " + std::to_string(kktVioliationTimer.seconds()) + " s", Log::DEBUG_2);
+  log.print("\t\t\tCpApr::multiplicative_update() does_violate_karush_kuhn_tucker_condition(): " + std::to_string(kktVioliationTimer.seconds()) + " s", Log::DEBUG_2);
 
   Kokkos::Timer multiplicativeUpdateCoreTimer;
   if (!kktViolation)
@@ -379,7 +516,7 @@ bool CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::mult
 
     CpAprMultiplicativeUpdateCaller_multiplicative_update<SparseValue, KruskalValue, ElemIdx, SubIdx>(kruskalOutput.get_factor_matrix_nRow(iDim), kruskalOutput.get_factor_matrix_nColumn(iDim), dPhi, dKdata);
   }
-  log.print("\tCpApr::multiplicative_update() Core: " + std::to_string(multiplicativeUpdateCoreTimer.seconds()) + " s", Log::DEBUG_2);
+  log.print("\t\t\tCpApr::multiplicative_update() Core: " + std::to_string(multiplicativeUpdateCoreTimer.seconds()) + " s\n", Log::DEBUG_2);
 
   return kktViolation;
 }
@@ -403,7 +540,7 @@ void CpAprMultiplicativeUpdateCaller_compute_pi_region2(
     const SparseIndicesConst<SubIdx> &indices,
     const std::vector<Kokkos::View<KruskalValue **>> &factorMatrices)
 {
-#if defined(KOKKOS_ENABLE_CUDA) 
+#if defined(KOKKOS_ENABLE_CUDA)
   const SubIdx VectorSize = kruskal_nComponent == 1 ? 1 : std::min(16,2 << int(std::log2(kruskal_nComponent))-1);
   const SubIdx TeamSize  = 128/VectorSize;
   const SubIdx LeagueSize = (sparse_nElement+TeamSize-1)/TeamSize;
@@ -460,7 +597,7 @@ void CpAprMultiplicativeUpdateCaller_compute_phi_region1(
     FactorMatrix<KruskalValue> &phi)
 {
   Log &log = Log::new_log();
-  log.print("Entering CpAprMultiplicativeUpdateCaller_compute_phi_region1", Log::DEBUG_3);
+  log.print("\t\t\tCpApr::CpAprMultiplicativeUpdateCaller_compute_phi_region1", Log::DEBUG_3);
   Kokkos::deep_copy( phi, 0.0 );
 }
 
@@ -480,7 +617,7 @@ void CpAprMultiplicativeUpdateCaller_compute_phi_region2(
     const FactorMatrixConst<KruskalValue> &kData)
 {
   Log &log = Log::new_log();
-  log.print("Entering CpAprMultiplicativeUpdateCaller_compute_phi_region2", Log::DEBUG_3);
+  log.print("\t\t\tCpApr::CpAprMultiplicativeUpdateCaller_compute_phi_region2", Log::DEBUG_3);
   typedef Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace> Policy;
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -505,7 +642,7 @@ void CpAprMultiplicativeUpdateCaller_compute_phi_region2(
       {
         ldVal += kData(index, iComp) *pi(iNnz, iComp);
       }, dVal);
-      
+
       dVal = static_cast<KruskalValue>(spData(iNnz)) /
         static_cast<KruskalValue>(max(static_cast<KruskalValue>(eps), static_cast<KruskalValue>(dVal)));
       Kokkos::parallel_for (Kokkos::ThreadVectorRange(team, kruskal_nComponent), [&] (SubIdx iComp)
@@ -589,9 +726,9 @@ void CpAprMultiplicativeUpdateCaller_compute_phi_region2(
                });
             } else {
                Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, kruskal_nComponent), [&](SubIdx iComp) {
-                  // Add previous accumulator. This is not working with hyperthreading. 
+                  // Add previous accumulator. This is not working with hyperthreading.
                   // May need to disable ThreadVectorRange for CPUs (and it is OK from the performance viewpoint).
-                  phi(iPrev, iComp) += mytmp[iComp] ; 
+                  phi(iPrev, iComp) += mytmp[iComp] ;
                  // Kokkos::atomic_add(&phi(iPrev, iComp), mytmp[iComp]); // Add previous accumulator
                   mytmp[iComp] = dValNew * pi(index, iComp);
                });
@@ -666,24 +803,45 @@ void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::comp
  //  FactorMatrixAtomic<KruskalValue> phiAtomic = this->_phiBuffer->get_factor_matrix(iDim);
 
   CpAprMultiplicativeUpdateCaller_compute_phi_region2<SparseValue, KruskalValue, ElemIdx, SubIdx>(kruskalOutput.get_factor_matrix_nRow(iDim), kruskalOutput.get_factor_matrix_nColumn(iDim), phi, nonzLoc, nonzLocIdx, iDim, this->_eps, _pi, spData, sparseInput.get_nElement(), indices,  kData);
-
-
 }
 
+template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
+KruskalValue  CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::compute_obj(
+    KruskalTensor<KruskalValue, SubIdx> const &kruskalOutput,
+    SparseTensor<SparseValue, ElemIdx, SubIdx> const &sparseInput,
+    SubIdx iDim)
+{
+  Log &log = Log::new_log();
+
+  // Get Factored Matrix
+  auto  kData = kruskalOutput.get_factor_matrix(iDim);
+  const auto  spData = sparseInput.get_data_view();
+  const auto  indices = sparseInput.get_indices_view();
+  auto nonzLoc = this->_nonzLoc;
+  auto nonzLocIdx = this->_nonzLocIdx;
+
+  return CpAprMultiplicativeUpdate_obj_liklihood<SparseValue, KruskalValue, ElemIdx, SubIdx>(kruskalOutput.get_factor_matrix_nRow(iDim), kruskalOutput.get_factor_matrix_nColumn(iDim), nonzLoc, nonzLocIdx, iDim, this->_eps, _pi, spData, sparseInput.get_nElement(), indices,  kData);
+}
 
 template<class SparseValue, class KruskalValue, class ElemIdx, class SubIdx>
 void CpAprMultiplicativeUpdate<SparseValue, KruskalValue, ElemIdx, SubIdx>::progress() const
 {
+
   Log &log = Log::new_log();
 
   std::stringstream message_release;
-  message_release << " Iter " << std::setfill(' ') << std::setw(4) << this->_nOuterIter ;
-  message_release << ": Inner Its = " << std::setfill(' ') << std::setw(2) << this->_nInnerIter ;
-  message_release << ", KKT Violation = " << std::scientific << this->_errorNorm;
-  message_release << ", nViolations = " << std::setfill(' ') << std::setw(2) << this->_numNonzeroViolations;
+  message_release << std::setfill(' ')
+                  << std::right
+                  << std::setw(5) << this->_nOuterIter
+                  << "  " << std::scientific << std::setprecision(16) << this->_errorNorm
+                  << "  " << std::scientific << std::setprecision (16) <<  this->_objective_func_value
+                  << "  " << std::scientific << std::setprecision(3) << this->_outerLoopTimerSeconds
+                  << "  " << std::setw(15) << this->_nFlops;
+
   log.print(message_release.str(), Log::RELEASE);
 
   CpAprBase<SparseValue, KruskalValue, ElemIdx, SubIdx>::progress();
+
 }
 
 // Explicit instantiation

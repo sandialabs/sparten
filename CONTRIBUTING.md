@@ -13,41 +13,40 @@ Government retains certain rights in this software.
 # SparTen Contribution Guide
 
 ## Checklist
-
-- [ ] **Issue**
-  Before the merge request, submit an issue for the change, providing
-  as much detailed information as possible. For bug reports, please
-  provide enough information to reproduce the problem.
-
-- [ ] **Fork**
-  Create a branch or fork of the code and make your changes.
-
-- [ ] **Documentation**
-  For any changes, add sufficient documentation in Doxygen-style comments.
-
-- [ ] **Unit Tests**
-  Create or update tests in the `unit_test` directory, especially for 
+ 
+- [ ] **Submit an issue.**
+  Use a descriptive title `<title>` and provide as much detailed information as possible in the comments. For bug reports, please provide a minimal working example to reproduce the problem. The issue will be numbered `<num>`.
+ 
+- [ ] **Create a branch and make your changes.**
+  Name the branch `<num>-<title>`. This is done automatically when using the web interface to Gitlab.
+ 
+- [ ] **Create a merge request.**
+  This can be done at the time the branch is created, which is preferred.
+ 
+- [ ] **Unit Tests.**
+  Create or update tests in the `unit_test` directory, especially for
   new code.
-
-- [ ] **Regression Tests**
-  Create or update tests in the `regrression_test` directory, especially for 
+ 
+- [ ] **Regression Tests.**
+  Create or update tests in the `regression_test` directory, especially for
   bugs/issues.
-
-- [ ] **Release Notes**
-  Update `CHANGELOG` with any significant bug fixes or
-  additions.
-
-- [ ] **Contributors List**
-  Update `CONTRIBUTORS.md` with your name and a brief description of
-  the contributions.
-
-- [ ] **Pass All Tests**
+ 
+- [ ] **Pass All Tests.**
   - [ ] Confirm that all unit tests pass: `./bin/Sparten_unit_test`.
   - [ ] Confirm that all regression tests pass: `./bin/Sparten_regression_test`.
+ 
+- [ ] **Documentation.**
+  A sufficient documentation in Doxygen-style comments.
+ 
+- [ ] **Release Notes**
+  Update `CHANGELOG` with any significant bug fixes or additions.
+ 
+- [ ] **Contributors List.**
+  Update `CONTRIBUTORS.md` with your name and a brief description of
+  the contributions.
+ 
+ 
+## Review
+- [ ] **Mark merge request as _ready_.** Iterate further if necessary.
 
-
-- [ ] **Merge Request**
-  At any point, create a work-in-progress merge request, referencing
-  the issue number and with this checklist and ```WIP``` in the header.
-
-
+- [ ] **Final step: merge branch**

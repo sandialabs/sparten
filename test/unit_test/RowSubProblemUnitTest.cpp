@@ -45,6 +45,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <Sparten_Configure.h>
 
 namespace unitTest {
 
@@ -240,7 +241,7 @@ void _sparten_rowsubproblem_test_driver(
 
    // This part can be moved to Setup
    sparten::AsciiIO<element_index_t, kruskal_value_t, element_index_t , sub_index_t > _sptensorIO(
-              "test/data/"+problem+"/tensor.txt", sparten::AsciiIO<element_index_t ,
+              SPARTEN_TEST_DIR "/test/data/"+problem+"/tensor.txt", sparten::AsciiIO<element_index_t ,
               kruskal_value_t , element_index_t , sub_index_t >::READ,
               _precision);
 
@@ -336,22 +337,22 @@ void _sparten_rowsubproblem_test_driver(
    typename Kokkos::View <kruskal_value_t *>::HostMirror  _daUnitStepAredHost = Kokkos::create_mirror_view(_daUnitStepAred);
    typename Kokkos::View <kruskal_value_t *>::HostMirror  _daInitialRhoHost = Kokkos::create_mirror_view(_daInitialRho);
 
-   _getMatrixFromFile( _daRowGradHost, "test/data/" + problem + "/daGrad.txt",nRows);
+   _getMatrixFromFile( _daRowGradHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daGrad.txt",nRows);
    Kokkos::deep_copy(_daRowGrad,_daRowGradHost);
 
-   _getMatrixFromFile( _daRowVarsHost, "test/data/" + problem + "/daOldVar.txt",nRows);
+   _getMatrixFromFile( _daRowVarsHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daOldVar.txt",nRows);
    Kokkos::deep_copy(_daRowVars, _daRowVarsHost);
 
-   _getMatrixFromFile( _daInitialDeltaGHost, "test/data/" + problem + "/daDeltaG.txt",nRows);
+   _getMatrixFromFile( _daInitialDeltaGHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daDeltaG.txt",nRows);
    Kokkos::deep_copy(_daInitialDeltaG, _daInitialDeltaGHost);
 
-   _getMatrixFromFile( _daInitialDeltaMHost, "test/data/" + problem + "/daDeltaM.txt",nRows);
+   _getMatrixFromFile( _daInitialDeltaMHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daDeltaM.txt",nRows);
    Kokkos::deep_copy(_daInitialDeltaM, _daInitialDeltaMHost);
 
-   _getVectorFromFile( _daInitialRhoHost, "test/data/" + problem + "/daRho.txt");
+   _getVectorFromFile( _daInitialRhoHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daRho.txt");
    Kokkos::deep_copy( _daInitialRho, _daInitialRhoHost);
 
-   _getMatrixFromFile( _daSearchDirHost, "test/data/" + problem + "/daSearchDir.txt",nRows);
+   _getMatrixFromFile( _daSearchDirHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daSearchDir.txt",nRows);
    Kokkos::deep_copy(_daSearchDir, _daSearchDirHost);
 
    if( _test_info == set_up_pi ) {
@@ -392,7 +393,7 @@ void _sparten_rowsubproblem_test_driver(
 
       // Verify the solution
       std::vector<kruskal_value_t> answer_pi(nElements * nComponents);
-      _getMatrixFromFile(answer_pi, "./test/data/"+ problem+"/local_pi.txt");
+      _getMatrixFromFile(answer_pi, SPARTEN_TEST_DIR "/test/data/"+ problem+"/local_pi.txt");
 
       typename Kokkos::View<kruskal_value_t **>::HostMirror result_pi_host = Kokkos::create_mirror_view (result_pi);
       Kokkos::deep_copy(result_pi_host, result_pi);
@@ -452,7 +453,7 @@ void _sparten_rowsubproblem_test_driver(
 
       Kokkos::deep_copy( phiHost, _daPhi );   // Verify the answer./
       std::vector<kruskal_value_t> answer(nComponents*nRows);
-      _getMatrixFromFile( answer, "test/data/" + problem + "/phi.txt");
+      _getMatrixFromFile( answer, SPARTEN_TEST_DIR "/test/data/" + problem + "/phi.txt");
 
       for( int i = 0; i < nRows; ++i ) {
          for (int j = 0; j < nComponents; ++j) {
@@ -502,7 +503,7 @@ void _sparten_rowsubproblem_test_driver(
       Kokkos::deep_copy( ValuesHost, _daValues);
 
       std::vector<kruskal_value_t> answer(nRows);
-      _getVectorFromFile( answer, "test/data/" + problem + "/likelihood.txt");
+      _getVectorFromFile( answer, SPARTEN_TEST_DIR "/test/data/" + problem + "/likelihood.txt");
       Kokkos::fence();
 
       for ( int i = 0; i < nRows; ++i )
@@ -556,7 +557,8 @@ void _sparten_rowsubproblem_test_driver(
 
       Kokkos::fence();
 
-      _getMatrixFromFile(  _daRowGradHost, "test/data/" + problem + "/daNewVar.txt",nRows); // Reusing the space for RowGrad_Host
+      _getMatrixFromFile(  _daRowGradHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daNewVar.txt",nRows); // Reusing the space for
+      // RowGrad_Host
 
 
       Kokkos::deep_copy( _daRowVarsHost, _daNewRowVars );
@@ -565,8 +567,8 @@ void _sparten_rowsubproblem_test_driver(
 
       std::vector<kruskal_value_t> answerObjNew(nRows);
       std::vector<kruskal_value_t> answerAred(nRows);
-      _getVectorFromFile( answerObjNew, "test/data/" + problem + "/daObj.txt" );
-      _getVectorFromFile( answerAred, "test/data/" + problem + "/daAred.txt" );
+      _getVectorFromFile( answerObjNew, SPARTEN_TEST_DIR "/test/data/" + problem + "/daObj.txt" );
+      _getVectorFromFile( answerAred, SPARTEN_TEST_DIR "/test/data/" + problem + "/daAred.txt" );
       for ( int i = 0; i < nRows; ++i ) {
 
          EXPECT_NEAR( answerObjNew[i], _daObjNewHost[i], std::abs(1e-10 *  answerObjNew[i]) );
@@ -619,7 +621,7 @@ void _sparten_rowsubproblem_test_driver(
       Kokkos::fence();
       Kokkos::deep_copy( _daSearchDirHost, _daSearchDir );
       std::vector<kruskal_value_t> answer(nComponents*nRows);
-      _getMatrixFromFile( answer, "test/data/" + problem + "/daSearchDir.txt");
+      _getMatrixFromFile( answer, SPARTEN_TEST_DIR "/test/data/" + problem + "/daSearchDir.txt");
       for ( int i = 0; i < nRows; ++i ) {
          for ( int j = 0; j < nComponents; ++j ) {
            EXPECT_NEAR( _daSearchDirHost(i,j), answer[i*nComponents+j],std::abs(1e-10 *  answer[i*nComponents+j]) );
@@ -627,10 +629,10 @@ void _sparten_rowsubproblem_test_driver(
       }
 
    } else if ( _test_info == searchDirPdnr ) { // search direction for pdnr
-      _getMatrixFromFile( _daRowGradHost, "test/data/" + problem + "/daGradPdnr.txt",nRows);
+      _getMatrixFromFile( _daRowGradHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daGradPdnr.txt",nRows);
       Kokkos::deep_copy(_daRowGrad,_daRowGradHost);
 
-      _getMatrixFromFile( _daRowVarsHost, "test/data/" + problem + "/daVarsPdnr.txt",nRows);
+      _getMatrixFromFile( _daRowVarsHost, SPARTEN_TEST_DIR "/test/data/" + problem + "/daVarsPdnr.txt",nRows);
       Kokkos::deep_copy(_daRowVars, _daRowVarsHost);
 
       auto numMode = kTensor.get_nDim();
@@ -674,7 +676,7 @@ void _sparten_rowsubproblem_test_driver(
       Kokkos::deep_copy( _daSearchDirHost, _daSearchDir );
 
       std::vector<kruskal_value_t> answer(nComponents*nRows);
-      _getMatrixFromFile( answer, "test/data/" + problem + "/daSearchDirPdnr.txt");
+      _getMatrixFromFile( answer, SPARTEN_TEST_DIR "/test/data/" + problem + "/daSearchDirPdnr.txt");
 
       for ( int i = 0; i < nRows; ++i ) {
          for ( int j = 0; j < nComponents; ++j ) {
@@ -689,7 +691,7 @@ void _sparten_rowsubproblem_test_driver(
 
 void RowSubProblemUnitTest::SetUp()
 {
-  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_SCREEN, "noFileNeeded", sparten::Log::QUIET);
+  sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_SCREEN, "", sparten::Log::QUIET);
 
   // Initialize the input data
    _precision=16;

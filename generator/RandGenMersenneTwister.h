@@ -44,4 +44,4 @@ private:
   RandGenMersenneTwister &operator=(RandGenMersenneTwister const &);    //!< Disable assignment operator
 };
 
-}
+} // end namespace sparten

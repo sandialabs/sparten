@@ -13,12 +13,12 @@ Government retains certain rights in this software.
 Primary POC: Danny Dunlavy, dmdunla@sandia.gov
 
 Active Developers:
-* Richard Barrett - bug fixes
 * Danny Dunlavy - main developer
-* D.S. Hollman - ```PQNR```, bug fixes 
-* Jeremy Myers - user interface, bug fixes
-* Keita Teranishi - main developer
+* Jeremy Myers - main developer
 
 Former Developers:
+* Richard Barrett - bug fixes
 * Chris Forster - main developer
+* D.S. Hollman - ```PQNR```, bug fixes 
 * Greg Mackey - build system
+* Keita Teranishi - main developer

@@ -29,6 +29,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdio>
+#include <Sparten_Configure.h>
 
 namespace unitTest
 {
@@ -37,7 +38,7 @@ void AsciiIOUnitTest::SetUp()
 {
   sparten::Log &log = sparten::Log::new_log(sparten::Log::TO_SCREEN, "noFileNeeded", sparten::Log::QUIET);
 
-  _sptensorFilename = "test/data/regression/sptensor_one_based_index.tns";
+  _sptensorFilename = SPARTEN_TEST_DIR "/test/data/regression/sptensor_one_based_index.tns";
   _nDim = 3;
   _nElement = 18;
   _nIndices.push_back(5);
@@ -100,15 +101,15 @@ TEST_F(AsciiIOUnitTest, constructor_desctructor)
 {
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensor;
   // parameters: filename, mode, precision
-  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   ASSERT_TRUE(sptensor != NULL);
   delete sptensor;
   // parameters: filename, mode, format, precision
-  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::FIXED_PRECISION, _precision);
+  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::FIXED_PRECISION, _precision);
   ASSERT_TRUE(sptensor != NULL);
   delete sptensor;
   // parameters: filename, mode, format, precision, index style
-  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::FIXED_PRECISION, _precision, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::INDEX_0);
+  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::FIXED_PRECISION, _precision, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::INDEX_0);
   ASSERT_TRUE(sptensor != NULL);
   // destructor
   delete sptensor;
@@ -118,7 +119,7 @@ TEST_F(AsciiIOUnitTest, open_file)
 {
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensor;
   // READ
-  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   ASSERT_TRUE(sptensor != NULL);
   delete sptensor;
 
@@ -133,7 +134,7 @@ TEST_F(AsciiIOUnitTest, open_file)
   delete sptensor;
 
   // READ_WRITE
-  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ_WRITE, _precision);
+  sptensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ_WRITE, _precision);
   ASSERT_TRUE(sptensor != NULL);
   delete sptensor;
 
@@ -161,13 +162,13 @@ TEST_F(AsciiIOUnitTest, read)
 {
   // zero-based indexing
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensor0;
-  sptensor0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  sptensor0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   sptensor0->read();
   ASSERT_EQ(sptensor0->usingOneIndex(), false);
 
   // one-based indexing
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensor1;
-  sptensor1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  sptensor1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   // check that the tensor matches what is in the file
   // Below are the contents of the file: test/data/regression/sptensor_zero_based_index.tns
   /*
@@ -241,12 +242,12 @@ TEST_F(AsciiIOUnitTest, read)
 
   // failure: incorrect tensor type
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensorF0;
-  sptensorF0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/tensor_incorrect_tensor_type.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  sptensorF0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/tensor_incorrect_tensor_type.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   ASSERT_ANY_THROW(sptensorF0->read());
 
   // failure: file not open
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensorF1;
-  sptensorF1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  sptensorF1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   sptensorF1->close_file();
   ASSERT_ANY_THROW(sptensorF1->read());
   delete(sptensor0);
@@ -259,26 +260,26 @@ TEST_F(AsciiIOUnitTest, read_header_data)
 {
   // zero-based indexing
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *header0;
-  header0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  header0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   header0->readHeaderData();
   ASSERT_EQ(header0->usingOneIndex(), false);
   ASSERT_STREQ((header0->fileType()).c_str(), "sptensor");
 
   // one-based indexing
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *header1;
-  header1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  header1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   header1->readHeaderData();
   ASSERT_EQ(header1->usingOneIndex(), true);
   ASSERT_STREQ((header1->fileType()).c_str(), "sptensor");
 
   // failure: incorrect tensor type
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *headerF0;
-  headerF0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/tensor_incorrect_tensor_type.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  headerF0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/tensor_incorrect_tensor_type.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   ASSERT_ANY_THROW(headerF0->readHeaderData());
 
   // failure: file not open
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *headerF1;
-  headerF1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  headerF1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_one_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   headerF1->close_file();
   ASSERT_ANY_THROW(headerF1->readHeaderData());
   delete(header0);
@@ -291,16 +292,16 @@ TEST_F(AsciiIOUnitTest, write)
 {
   // read sparse tensor file
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensor0;
-  sptensor0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
-  sparten::SparseTensor<sparten::type::ElemIdx, sparten::type::ElemIdx, sparten::type::SubIdx> *sparseInput = sptensor0->read();  
-  
+  sptensor0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/sptensor_zero_based_index.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  sparten::SparseTensor<sparten::type::ElemIdx, sparten::type::ElemIdx, sparten::type::SubIdx> *sparseInput = sptensor0->read();
+
   // write and read tensor: one-based
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensor1;
   sptensor1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("./AsciiIOUnitTest.cpp.one-based.temp", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::OVERWRITE, _precision);
   sptensor1->write(*sparseInput);
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *sptensor2;
   sptensor2 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("./AsciiIOUnitTest.cpp.one-based.temp", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
-  sparten::SparseTensor<sparten::type::ElemIdx, sparten::type::ElemIdx, sparten::type::SubIdx> *sparseOutput = sptensor2->read();  
+  sparten::SparseTensor<sparten::type::ElemIdx, sparten::type::ElemIdx, sparten::type::SubIdx> *sparseOutput = sptensor2->read();
   // compare header info
   ASSERT_STREQ((sptensor2->fileType()).c_str(), "sptensor");
   ASSERT_EQ(sptensor2->usingOneIndex(), true);
@@ -354,7 +355,7 @@ TEST_F(AsciiIOUnitTest, write)
   sptensor1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("./AsciiIOUnitTest.cpp.zero-based.temp", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::OVERWRITE, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::FIXED_PRECISION, _precision, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::INDEX_0);
   sptensor1->write(*sparseInput);
   sptensor2 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("./AsciiIOUnitTest.cpp.zero-based.temp", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::FIXED_PRECISION, _precision, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::INDEX_0);
-  sparseOutput = sptensor2->read();  
+  sparseOutput = sptensor2->read();
   // compare header info
   ASSERT_STREQ((sptensor2->fileType()).c_str(), "sptensor");
   ASSERT_EQ(sptensor2->usingOneIndex(), false);
@@ -416,7 +417,7 @@ TEST_F(AsciiIOUnitTest, read_ktensor)
 {
   // read_ktensor
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *ktensor;
-  ktensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/ktensor.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  ktensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/ktensor.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
 
   // check that the tensor matches what is in the file
   // Below are the contents of the file: test/data/regression/ktensor.tns
@@ -461,23 +462,23 @@ TEST_F(AsciiIOUnitTest, read_ktensor)
   ASSERT_EQ(ktensorOutput->get_factor_matrix_nColumn(2), 2);
   delete(ktensor);
   delete(ktensorOutput);
-  
+
   // failure: incorrect factor matrix type
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *ktensorF0;
-  ktensorF0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/ktensor_factor_matrix_error.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  ktensorF0 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/ktensor_factor_matrix_error.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   ASSERT_ANY_THROW(ktensorF0->read_ktensor());
   delete(ktensorF0);
 
   // failure: file not open
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *ktensorF1;
-  ktensorF1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/ktensor.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  ktensorF1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/ktensor.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   ktensorF1->close_file();
   ASSERT_ANY_THROW(ktensorF1->read_ktensor());
   delete(ktensorF1);
 
   // failure: incorrect tensor type
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *ktensorF2;
-  ktensorF2 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/ktensor_incorrect_tensor_type.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  ktensorF2 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/ktensor_incorrect_tensor_type.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   ASSERT_ANY_THROW(ktensorF2->read_ktensor());
   delete(ktensorF2);
 
@@ -488,7 +489,7 @@ TEST_F(AsciiIOUnitTest, write_ktensor)
   // Currently disabled due to unimplemented KruskalTensor::compare
   // read_ktensor
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *ktensor;
-  ktensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("test/data/regression/ktensor.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
+  ktensor = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>(SPARTEN_TEST_DIR "/test/data/regression/ktensor.tns", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::READ, _precision);
   sparten::KruskalTensor<double, sparten::type::SubIdx> *ktensorInput = ktensor->read_ktensor();
 
   // check that the tensor matches what is in the file
@@ -539,7 +540,7 @@ TEST_F(AsciiIOUnitTest, write_ktensor)
   // compare input and output
   ASSERT_TRUE(ktensorOutput->compare(*ktensorInput, 1e-5));
   delete(ktensorOutput);
-  
+
   // write_ktensor, fixed precision
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *ktensor3;
   ktensor3 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("./AsciiIOUnitTest.cpp.ktensor_fixed.temp", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::OVERWRITE, sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::FIXED_PRECISION, 5);
@@ -554,7 +555,7 @@ TEST_F(AsciiIOUnitTest, write_ktensor)
   // compare input and output
   ASSERT_TRUE(ktensorOutput2->compare(*ktensorInput, 1e-5));
   delete(ktensorInput);
-    
+
   // failure: file not open
   sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx> *ktensorF1;
   ktensorF1 = new sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>("./AsciiIOUnitTest.cpp.ktensor_error.temp", sparten::AsciiIO<sparten::type::ElemIdx, double, sparten::type::ElemIdx, sparten::type::SubIdx>::OVERWRITE, _precision);

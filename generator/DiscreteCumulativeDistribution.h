@@ -51,4 +51,4 @@ private:
   Vector<KruskalValue> _cCDF;                                                           //!< Cumulative distribution function
 };
 
-}
+} // end namespace sparten

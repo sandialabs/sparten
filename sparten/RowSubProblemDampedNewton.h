@@ -25,7 +25,6 @@
 #include <sparten/RowSubProblem.h>
 #include <sparten/spartenUtils.h>
 #include <sparten/spartenBlas.h>
-#include <iomanip>
 
 namespace sparten {
 
